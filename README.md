@@ -22,7 +22,7 @@
 
 https流量需要安装证书，如下：
 
-![image-20250807153132257](C:\Users\admin\Desktop\daima\python\DAST-Python\images\image-20250807152745889.png)
+![image-20250807153132257](images/image-20250807152745889.png)
 
 浏览器设置代理后，访问http://mitm.it:
 
