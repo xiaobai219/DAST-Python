@@ -1,0 +1,81 @@
+[
+	{
+		"id": 1,
+		"title": "工单列表",
+		"icon": "layui-icon layui-icon-auz",
+		"type": 1,
+		"openType": "_component",
+		"href": "/view/component/workOrder.html"
+	},{
+		"id": 2,
+		"title": "应用管理",
+		"icon": "layui-icon layui-icon-console",
+		"type": 0,
+		"children": [
+			{
+				"id": 21,
+				"title": "应用资产",
+				"icon": "layui-icon layui-icon-face-smile",
+				"type": 1,
+				"openType": "_component",
+				"href": "/view/component/applicationAssets.html"
+			},
+			{
+				"id": 22,
+				"title": "接口资产",
+				"icon": "layui-icon layui-icon-face-smile",
+				"type": 1,
+				"openType": "_component",
+				"href": "/view/component/apiList.html"
+			}
+		]
+	},
+	{
+		"id": 3,
+		"title": "扫描管理",
+		"icon": "layui-icon layui-icon-layer",
+		"type": 0,
+		"children": [
+			{
+				"id": 31,
+				"title": "扫描配置",
+				"icon": "layui-icon layui-icon-face-smile",
+				"type": 1,
+				"openType": "_component",
+				"href": "/view/component/ruleConfig.html"
+			},
+			{
+				"id": 32,
+				"title": "扫描列表",
+				"icon": "layui-icon layui-icon-face-smile",
+				"type": 1,
+				"openType": "_component",
+				"href": "/view/component/scanList.html"
+			}
+		]
+	},
+	{
+		"id": 4,
+		"title": "系统管理",
+		"icon": "layui-icon layui-icon-set",
+		"type": 0,
+		"children": [
+			{
+				"id": 41,
+				"title": "用户管理",
+				"icon": "layui-icon layui-icon-face-smile",
+				"type": 1,
+				"openType": "_component",
+				"href": "/view/system/user.html"
+			},
+			{
+				"id": 42,
+				"title": "配置管理",
+				"icon": "layui-icon layui-icon-face-smile",
+				"type": 1,
+				"openType": "_component",
+				"href": "/view/system/config.html"
+			}
+		]
+	}
+]

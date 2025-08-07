@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>接口资产</title>
+    <link rel="stylesheet" href="/static/component/pear/css/pear.css" />
+    <style>
+        .layui-form-label{
+            width: 70px;
+            padding: 9px 5px;
+        }
+    </style>
+</head>
+<body class="pear-container">
+<div class="layui-card">
+    <div class="layui-card-body">
+        <form class="layui-form" action="">
+            <div class="layui-form-item">
+                <div class="layui-form-item layui-inline">
+                    <label class="layui-form-label">API</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="apiPath" placeholder="API" class="layui-input apiPath">
+                    </div>
+                    <label class="layui-form-label">部门</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="department" placeholder="部门" class="layui-input department">
+                    </div>
+                    <label class="layui-form-label">业务线</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="businessline" placeholder="业务线" class="layui-input businessline">
+                    </div>
+                    <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="api-query">
+                        <i class="layui-icon layui-icon-search"></i>
+                        搜索
+                    </button>
+                    <button type="reset" class="pear-btn pear-btn-md">
+                        <i class="layui-icon layui-icon-refresh"></i>
+                        重置
+                    </button>
+                    <button class="pear-btn pear-btn-md layui-border-green" lay-submit lay-filter="api-export">
+                        <i class="layui-icon layui-icon-download-circle"></i>
+                        导出
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="layui-card">
+    <div class="layui-card-body">
+        <table id="api-table" lay-filter="api-table"></table>
+    </div>
+</div>
+
+<script type="text/html" id="api-toolbar">
+    <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="add">
+        <i class="layui-icon layui-icon-add-1"></i>
+        新增
+    </button>
+    <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove">
+        <i class="layui-icon layui-icon-delete"></i>
+        删除
+    </button>
+</script>
+
+<script src="/static/component/layui/layui.js"></script>
+<script src="/static/component/pear/pear.js"></script>
+<script>
+    layui.use(['table', 'form', 'jquery','common'], function() {
+        let table = layui.table;
+        let form = layui.form;
+        let $ = layui.jquery;
+        let common = layui.common;
+
+        let cols = [
+            [{
+                type: 'checkbox'
+            },
+                {
+                    title: 'ID',
+                    field: 'id',
+                    align: 'center',
+                    width: 100
+                },
+                {
+                    title: 'API',
+                    field: 'apiPath',
+                    align: 'center'
+                },
+                {
+                    title: '描述',
+                    field: 'describe',
+                    align: 'center'
+                },
+                {
+                    title: '部门',
+                    field: 'department',
+                    align: 'center'
+                },
+                {
+                    title: '业务线',
+                    field: 'businessline',
+                    align: 'center',
+                },
+                {
+                    title: '创建时间',
+                    field: 'createAt',
+                    align: 'center',
+                },
+                {
+                    title: '更新时间',
+                    field: 'updateAt',
+                    align: 'center',
+                },
+                {
+                    title: '操作',
+                    field: 'operate',
+                    width: 100,
+                    fixed: 'right',  // 固定在右侧
+                    align: 'center',
+                    // 自定义模板，添加两个按钮
+                    templet: function(d){
+                      return `
+                        <button class="layui-btn pear-btn-sm" lay-event="detail">详情</button>
+<!--                        <button class="layui-btn layui-btn-normal pear-btn-sm" lay-event="edit">编辑</button>-->
+                      `;
+                    }
+                }
+            ]
+        ]
+
+        table.render({
+            elem: '#api-table',
+            url: '/api/searchApi',
+            page: true,
+            method: "POST",
+            cols: cols,
+            contentType: 'application/json',
+            skin: 'line',
+            toolbar: '#api-toolbar',
+            defaultToolbar: [{
+                title: '刷新',
+                layEvent: 'refresh',
+                icon: 'layui-icon-refresh',
+            }, 'filter', 'print', 'exports'],
+            where: {"apiPath": $(".apiPath").val(), "department": $(".department").val(),"businessline": $(".businessline").val()}
+        });
+
+        table.on('toolbar(api-table)', function(obj) {
+            if (obj.event === 'add') {
+                window.add();
+            } else if (obj.event === 'refresh') {
+                window.refresh();
+            } else if (obj.event === 'batchRemove') {
+                window.batchRemove(obj);
+            }
+        });
+
+        form.on('submit(api-query)', function() {
+            table.reload('api-table', {
+                where: {"apiPath": $(".apiPath").val(), "department": $(".department").val(),"businessline": $(".businessline").val()},
+                page: {
+                    curr: 1 // 重新从第 1 页开始
+                },
+            })
+            return false;
+        });
+
+
+        form.on('submit(api-export)', function() {
+            window.open('/api/common/export?type=api')
+            return false;
+        });
+
+        // 监听工具条事件
+        table.on('tool(api-table)', function(obj){
+            var data = obj.data; // 获得当前行数据
+            var layEvent = obj.event; // 获得 lay-event 对应的值
+            if(layEvent === 'detail'){
+                layer.open({
+                    type: 2,
+                    title: 'API资产详情',
+                    shade: 0.1,
+                    area: [common.isModile()?'100%':'1300px', common.isModile()?'100%':'850px'],
+                    content: '/view/api/api_detail?id=' + data.id
+                });
+            } else if(layEvent === 'edit'){
+                currentId = data.id;
+
+            }
+        });
+
+        window.add = function() {
+            layer.open({
+                type: 2,
+                title: '新增应用资产',
+                shade: 0.1,
+                area: [common.isModile()?'100%':'1000px', common.isModile()?'100%':'700px'],
+                content: '/view/module/addApi.html'
+            });
+        }
+
+        window.batchRemove = function(obj) {
+            var checkStatus = table.checkStatus('api-table');
+            var data = checkStatus.data;
+
+            if (data.length === 0) {
+                layer.msg("未选中数据", {
+                    icon: 3,
+                    time: 1000
+                });
+                return false;
+            }
+
+            // 提取选中行的ID数组
+            var ids = data.map(function(item) {
+                return item.id;
+            });
+
+
+            layer.confirm('确定要删除这些接口资产吗？', {
+                icon: 3,
+                title: '提示'
+            }, function(index) {
+                layer.close(index);
+                let loading = layer.load();
+                $.ajax({
+                    url: "/api/api/deleteById",
+                    data: JSON.stringify(ids),
+                    contentType: 'application/json',
+                    method: "POST",
+                    success: function(result) {
+                        layer.close(loading);
+                        if (result.code === 200) {
+                            layer.msg(result.message, {
+                                icon: 1,
+                                time: 1000
+                            }, function() {
+                                table.reload('api-table');
+                            });
+                        } else {
+                            layer.msg(result.message, {
+                                icon: 2,
+                                time: 1000
+                            });
+                        }
+                    }
+                })
+            });
+        }
+
+        window.refresh = function(param) {
+            table.reload('api-table');
+        }
+    })
+</script>
+</body>
+</html>

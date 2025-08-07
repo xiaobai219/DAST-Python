@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>应用资产</title>
+    <link rel="stylesheet" href="/static/component/pear/css/pear.css" />
+    <style>
+        .url-icon {
+            color: #ADD8E6;
+            cursor: pointer;
+            font-size: 10px !important;
+            /*width: 18px;*/
+            /*height: 18px;*/
+            /*display: flex;*/
+            /*align-items: center;*/
+            /*justify-content: center;*/
+            border: 1px solid #C0C0C0;
+            border-radius: 3px;
+            /*transition: all 0.2s ease;*/
+        }
+        .layui-form-label{
+        width: 60px;
+        padding: 9px 5px;
+        }
+        /* 标签容器 - 使用弹性布局并允许换行 */
+        .tag-container {
+        display: flex;
+        flex-wrap: wrap;
+        line-height: 1.4;  /* 减小行高 */
+        }
+
+        /* 标签样式 - 更小的尺寸 */
+        .tag {
+        display: inline-block;
+        padding: 0.5px 5px;  /* 进一步减小内边距 */
+        margin: 0 1.5px 1.5px 0;  /* 减小边距 */
+        background-color: #f2f2f2;
+        border-radius: 2px;  /* 减小圆角 */
+        font-size: 10px;  /* 减小字体大小 */
+        border: 1px solid #e0e0e0;  /* 微调边框颜色 */
+        white-space: nowrap;  /* 防止标签内文字换行 */
+        transition: all 0.15s;  /* 缩短过渡时间 */
+        }
+
+        /* 鼠标悬停效果 */
+        .tag:hover {
+        transform: translateY(-0.5px);  /* 减小上浮距离 */
+        box-shadow: 0 0.5px 2px rgba(0,0,0,0.1);  /* 微调阴影 */
+        }
+
+        /* 不同类型标签的样式 */
+        .tag-blue {
+        background-color: #e8f4fd;
+        border-color: #b3d7f8;
+        color: #1890ff;
+        }
+        .tag-green {
+        background-color: #f0f9eb;
+        border-color: #b7eb8f;
+        color: #52c41a;
+        }
+        .tag-orange {
+        background-color: #fff7e8;
+        border-color: #ffe58f;
+        color: #fa8c16;
+        }
+        .tag-purple {
+        background-color: #f6f3ff;
+        border-color: #d9c3fa;
+        color: #722ed1;
+        }
+
+        /* 调整表格行高 */
+        .layui-table-cell {
+        height: auto !important;  /* 允许单元格高度自适应 */
+        }
+    </style>
+</head>
+<body class="pear-container">
+<div class="layui-card">
+    <div class="layui-card-body">
+        <form class="layui-form" action="">
+            <div class="layui-form-item">
+                <div class="layui-form-item layui-inline">
+                    <label class="layui-form-label">系统名称</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="assetName" placeholder="系统名称" class="layui-input assetName">
+                    </div>
+                    <label class="layui-form-label">URL</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="url" placeholder="url" class="layui-input url">
+                    </div>
+                    <label class="layui-form-label">部门</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="department" placeholder="部门" class="layui-input department">
+                    </div>
+                    <label class="layui-form-label">业务线</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="businessline" placeholder="业务线" class="layui-input businessline">
+                    </div>
+                    <label class="layui-form-label">技术栈</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="technologyStack" placeholder="技术栈" class="layui-input technologyStack">
+                    </div>
+                    <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="asset-query">
+                        <i class="layui-icon layui-icon-search"></i>
+                        搜索
+                    </button>
+                    <button type="reset" class="pear-btn pear-btn-md">
+                        <i class="layui-icon layui-icon-refresh"></i>
+                        重置
+                    </button>
+                    <button class="pear-btn pear-btn-md layui-border-green" lay-submit lay-filter="asset-export">
+                        <i class="layui-icon layui-icon-download-circle"></i>
+                        导出
+                    </button>
+                    <button type="button" class="pear-btn pear-btn-md layui-btn layui-border-blue demo-class-accept" lay-options="{accept: 'file'}" style="margin-bottom: 5px;">
+                        <i class="layui-icon layui-icon-upload"></i>
+                        导入
+                    </button>
+                </div>
+                <div class="layui-form-item layui-inline">
+                    <label class="layui-form-label">内外网</label>
+                    <div class="layui-input-inline">
+                        <select name="event" id="insideOroutside-select" lay-search="">
+                            <option value=""></option>
+                            <option value="1">内网</option>
+                            <option value="2">外网</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="layui-card">
+    <div class="layui-card-body">
+        <table id="asset-table" lay-filter="asset-table"></table>
+    </div>
+</div>
+
+<script type="text/html" id="asset-toolbar">
+    <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="add">
+        <i class="layui-icon layui-icon-add-1"></i>
+        新增
+    </button>
+    <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove">
+        <i class="layui-icon layui-icon-delete"></i>
+        删除
+    </button>
+    <button class="pear-btn pear-btn-md layui-border-blue" lay-event="update">
+        <i class="layui-icon layui-icon-moon"></i>
+        更新
+    </button>
+    <button class="pear-btn pear-btn-md" lay-event="apply">
+        <i class="layui-icon layui-icon-component"></i>
+        应用规则
+    </button>
+</script>
+<!-- 定义URL列的模板 -->
+<script type="text/html" id="urlTpl">
+    {% raw %}
+    <span class="url-text">{{d.url}}</span>
+    <i class="layui-icon layui-icon-link url-icon"></i>
+    {% endraw %}
+</script>
+<script src="/static/component/layui/layui.js"></script>
+<script src="/static/component/pear/pear.js"></script>
+<script>
+    layui.use(['table', 'form', 'jquery','common', 'upload'], function() {
+        let table = layui.table;
+        let form = layui.form;
+        let $ = layui.jquery;
+        let common = layui.common;
+        var upload = layui.upload;
+
+        let cols = [
+            [{
+                type: 'checkbox'
+            },
+                {
+                    title: 'ID',
+                    field: 'id',
+                    align: 'center',
+                    width: 100
+                },
+                {
+                    title: '系统名称',
+                    field: 'assetName',
+                    align: 'center'
+                },
+                {
+                    title: 'URL',
+                    field: 'url',
+                    align: 'center',
+                    templet: '#urlTpl'
+                },
+                {
+                    title: '内外网',
+                    field: 'insideOroutside',
+                    align: 'center',
+                },
+                {
+                    title: '关联接口数',
+                    field: 'linkedApiNum',
+                    align: 'center',
+                },
+                {
+                    title: '部门',
+                    field: 'department',
+                    align: 'center'
+                },
+                {
+                    title: '业务线',
+                    field: 'businessline',
+                    align: 'center',
+                },
+                {
+                    title: '应用负责人',
+                    field: 'owner',
+                    align: 'center',
+                },
+                {
+                    title: '技术栈',
+                    field: 'technologyStack',
+                    align: 'center',
+                    templet: function(d) {
+                      // 将分号分隔的字符串转换为标签
+                      const techs = d.technologyStack.split(',');
+                      let html = '<div class="tag-container">';  /* 添加标签容器 */
+
+                      techs.forEach((tech, index) => {
+                        // 根据索引循环使用不同样式
+                        const styles = ['tag-blue', 'tag-green', 'tag-orange', 'tag-purple'];
+                        const style = styles[index % styles.length];
+                        html += `<span class="tag ${style}">${tech}</span>`;
+                      });
+
+                      html += '</div>';  /* 关闭标签容器 */
+                      return html;
+                    }
+                },
+                {
+                    title: '创建时间',
+                    field: 'createAt',
+                    align: 'center',
+                },
+                {
+                    title: '操作',
+                    field: 'operate',
+                    width: 100,
+                    fixed: 'right',  // 固定在右侧
+                    align: 'center',
+                    // 自定义模板，添加两个按钮
+                    templet: function(d){
+                      return `
+                        <button class="layui-btn layui-btn-normal pear-btn-sm" lay-event="edit">编辑</button>
+                      `;
+                    }
+                }
+            ]
+        ]
+
+        table.render({
+            elem: '#asset-table',
+            url: '/api/searchAsset',
+            page: true,
+            method: "POST",
+            cols: cols,
+            contentType: 'application/json',
+            skin: 'line',
+            toolbar: '#asset-toolbar',
+            defaultToolbar: [{
+                title: '刷新',
+                layEvent: 'refresh',
+                icon: 'layui-icon-refresh',
+            }, 'filter', 'print', 'exports'],
+            where: {"assetName": $(".assetName").val(),"url": $(".url").val(),"department": $(".department").val(),"businessline": $(".businessline").val(),"technologyStack": $(".technologyStack").val(), "insideOroutside": $('#insideOroutside option:selected').text()}
+        });
+
+        table.on('toolbar(asset-table)', function(obj) {
+            if (obj.event === 'add') {
+                window.add();
+            } else if (obj.event === 'refresh') {
+                window.refresh();
+            } else if (obj.event === 'batchRemove') {
+                window.batchRemove(obj);
+            }else if (obj.event === 'update') {
+                window.update(obj);
+            }else if (obj.event === 'apply'){
+                $.ajax({
+                    url: "/api/collection/apply",
+                    method: "GET",
+                    type: "json",
+                    success: function(result) {
+                        if (result.code === 200) {
+                            layer.msg(result.message, {
+                                icon: 1,
+                                time: 1000
+                            });
+                        } else {
+                            layer.msg(result.message, {
+                                icon: 2,
+                                time: 1000
+                            });
+                        }
+                    }
+                })
+            }
+        });
+
+        form.on('submit(asset-query)', function() {
+            table.reload('asset-table', {
+                where: {"assetName": $(".assetName").val(),"url": $(".url").val(),"department": $(".department").val(),"businessline": $(".businessline").val(),"technologyStack": $(".technologyStack").val(), "insideOroutside": $('#insideOroutside option:selected').text()},
+                page: {
+                    curr: 1 // 重新从第 1 页开始
+                },
+            })
+            return false;
+        });
+
+        form.on('submit(asset-export)', function() {
+            window.open('/api/common/export?type=asset')
+            return false;
+        });
+
+        // 监听工具条事件
+        table.on('tool(asset-table)', function(obj){
+            var data = obj.data; // 获得当前行数据
+            var layEvent = obj.event; // 获得 lay-event 对应的值
+                if(layEvent === 'edit'){
+                    layer.open({
+                    type: 2,
+                    title: '编辑应用资产',
+                    shade: 0.1,
+                    area: [common.isModile()?'100%':'1310px', common.isModile()?'100%':'800px'],
+                    content: '/view/module/addAsset.html?id=' + data.id
+                });
+            }
+        });
+
+
+        upload.render({
+            elem: '.demo-class-accept', // 绑定多个元素
+            url: '/api/common/upload?type=asset', // 此处配置你自己的上传接口即可
+            accept: 'file', // 普通文件
+            done: function(res){
+                if (res.code === 200) {
+                    layer.msg(res.message, {
+                        icon: 1,
+                        time: 1000
+                    });
+                } else {
+                    layer.msg(res.message, {
+                        icon: 2,
+                        time: 1000
+                    });
+                }
+            }
+        });
+
+        window.add = function() {
+            layer.open({
+                type: 2,
+                title: '新增应用资产',
+                shade: 0.1,
+                area: [common.isModile()?'100%':'1000px', common.isModile()?'100%':'800px'],
+                content: '/view/module/addAsset.html'
+            });
+        }
+
+
+        window.batchRemove = function(obj) {
+
+            var checkStatus = table.checkStatus('asset-table');
+            var data = checkStatus.data;
+
+            if (data.length === 0) {
+                layer.msg("未选中数据", {
+                    icon: 3,
+                    time: 1000
+                });
+                return false;
+            }
+
+            // 提取选中行的ID数组
+            var ids = data.map(function(item) {
+                return item.id;
+            });
+
+
+            layer.confirm('确定要删除这些应用资产吗？', {
+                icon: 3,
+                title: '提示'
+            }, function(index) {
+                layer.close(index);
+                let loading = layer.load();
+                $.ajax({
+                    url: "/api/asset/deleteById",
+                    data: JSON.stringify(ids),
+                    contentType: 'application/json',
+                    method: "POST",
+                    success: function(result) {
+                        layer.close(loading);
+                        if (result.code === 200) {
+                            layer.msg(result.message, {
+                                icon: 1,
+                                time: 1000
+                            }, function() {
+                                table.reload('asset-table');
+                            });
+                        } else {
+                            layer.msg(result.message, {
+                                icon: 2,
+                                time: 1000
+                            });
+                        }
+                    }
+                })
+            });
+        }
+
+        window.refresh = function(param) {
+            table.reload('asset-table');
+        }
+
+        window.update = function (param) {
+            var checkStatus = table.checkStatus('asset-table');
+            var data = checkStatus.data;
+
+            if (data.length === 0) {
+                layer.msg("未选中数据", {
+                    icon: 3,
+                    time: 1000
+                });
+                return false;
+            }
+
+            // 提取选中行的ID数组
+            var ids = data.map(function(item) {
+                return item.id;
+            });
+
+            $.ajax({
+                    url: "/api/asset/updateNumById",
+                    data: JSON.stringify(ids),
+                    contentType: 'application/json',
+                    method: "POST",
+                    success: function(result) {
+                        if (result.code === 200) {
+                            layer.msg(result.message, {
+                                icon: 1,
+                                time: 1000
+                            }, function() {
+                                table.reload('asset-table');
+                            });
+                        } else {
+                            layer.msg(result.message, {
+                                icon: 2,
+                                time: 1000
+                            });
+                        }
+                    }
+                })
+        }
+
+
+        // 为URL图标绑定点击事件
+        $(document).on('click', '.url-icon', function(e) {
+            e.stopPropagation(); // 阻止事件冒泡到文本
+            var url = $(this).prev('.url-text').text();
+            window.open(url, '_blank');
+        });
+    })
+</script>
+</body>
+</html>

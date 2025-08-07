@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>接口详情</title>
+    <link rel="stylesheet" href="/static/component/pear/css/pear.css" />
+    <link rel="stylesheet" href="/static/component/layui/css/font-awesome.min.css">
+    <style>
+        body {
+            background-color: #f5f7fa;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+
+        .detail-container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eaecef;
+        }
+
+        .page-title {
+            font-size: 22px;
+            color: #333;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+
+        .page-title i {
+            margin-right: 10px;
+            color: #1E9FFF;
+        }
+
+        .panel-card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .panel-card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        .panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f5f7fa;
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+            background-color: #fafafa;
+        }
+
+        .panel-body {
+            padding: 20px;
+        }
+
+        /* 固定大小的代码块容器 */
+        .code-container {
+            position: relative;
+            width: 100%;
+            height: 400px; /* 固定高度 */
+            box-sizing: border-box;
+        }
+
+        .code-block {
+            background-color: #282c34;
+            border-radius: 6px;
+            padding: 18px;
+            font-family: Consolas, Monaco, monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            width: 100%;
+            height: 100%; /* 填满容器 */
+            overflow-y: auto; /* 垂直滚动 */
+            overflow-x: auto; /* 水平滚动（内容过宽时） */
+            font-size: 14px;
+            line-height: 1.6;
+            color: #abb2bf;
+            box-sizing: border-box;
+        }
+
+        /* 代码高亮样式 */
+        .code-keyword { color: #c678dd; }
+        .code-string { color: #98c379; }
+        .code-number { color: #d19a66; }
+        .code-comment { color: #5c6370; font-style: italic; }
+        .code-function { color: #61afef; }
+        .code-parameter { color: #e06c75; }
+
+        .table-detail {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table-detail th, .table-detail td {
+            border: 1px solid #f0f2f5;
+            padding: 14px 15px;
+            text-align: left;
+        }
+
+        .table-detail th {
+            background-color: #fafafa;
+            font-weight: 500;
+            width: 20%;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .table-detail td {
+            color: #333;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* 复制按钮样式 */
+        .copy-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 6px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.2s;
+            z-index: 10; /* 确保按钮在滚动条上方 */
+        }
+
+        .copy-btn i {
+            margin-right: 5px;
+        }
+
+        .copy-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* 加载状态样式 */
+        .loading {
+            color: #999;
+            font-style: italic;
+            display: inline-block;
+            padding: 5px 0;
+        }
+
+        .loading:after {
+            content: '';
+            display: inline-block;
+            width: 13px;
+            height: 13px;
+            margin-left: 8px;
+            border: 2px solid #ccc;
+            border-top-color: #1E9FFF;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 标签页样式 */
+        .layui-tab {
+            margin: 0;
+        }
+
+        .layui-tab-title {
+            background-color: #fafafa;
+            border-bottom: 1px solid #f5f7fa;
+        }
+
+        .layui-tab-title li {
+            padding: 0 20px;
+            height: 40px;
+            line-height: 40px;
+        }
+
+        .layui-tab-title .layui-this {
+            color: #1E9FFF;
+            border-top: 2px solid #1E9FFF;
+            border-bottom: none;
+            background-color: #fff;
+        }
+
+        .layui-tab-content {
+            padding: 0;
+            margin-top: 0;
+        }
+
+        .layui-tab-item {
+            padding: 20px;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .table-detail th {
+                width: 30%;
+            }
+
+            .detail-container {
+                padding: 10px;
+            }
+
+            .code-container {
+                height: 300px; /* 小屏幕上适当减小高度 */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="detail-container">
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fa fa-plug"></i>接口详情
+            </h1>
+        </div>
+
+        <!-- 接口基本信息（表格形式） -->
+        <div class="panel-card">
+            <div class="panel-header">
+                <i class="fa fa-info-circle"></i>接口基本信息
+            </div>
+            <div class="panel-body">
+                <table class="table-detail">
+                    <tbody>
+                        <tr>
+                            <th>接口路径</th>
+                            <td id="apiPath"><span class="loading">加载中</span></td>
+                        </tr>
+                        <tr>
+                            <th>描述</th>
+                            <td id="describe"><span class="loading">加载中</span></td>
+                        </tr>
+                        <tr>
+                            <th>部门</th>
+                            <td id="department"><span class="loading">加载中</span></td>
+                        </tr>
+                        <tr>
+                            <th>业务线</th>
+                            <td id="businessline"><span class="loading">加载中</span></td>
+                        </tr>
+                        <tr>
+                            <th>创建时间</th>
+                            <td id="createAt"><span class="loading">加载中</span></td>
+                        </tr>
+                        <tr>
+                            <th>更新时间</th>
+                            <td id="updateAt"><span class="loading">加载中</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 请求和响应内容 - 使用标准Layui标签页结构 -->
+        <div class="panel-card">
+            <div class="layui-tab" lay-filter="detailTab">
+                <ul class="layui-tab-title">
+                    <li class="layui-this"><i class="fa fa-paper-plane-o"></i> 请求内容</li>
+                    <li><i class="fa fa-reply"></i> 响应内容</li>
+                </ul>
+                <div class="layui-tab-content">
+                    <!-- 请求内容 -->
+                    <div class="layui-tab-item layui-show">
+                        <div class="code-container">
+                            <button class="copy-btn" id="copyBtn1">
+                                <i class="fa fa-copy"></i> 复制
+                            </button>
+                            <div class="code-block" id="requestBlock"><span class="loading">加载中</span></div>
+                        </div>
+                    </div>
+
+                    <!-- 响应内容 -->
+                    <div class="layui-tab-item">
+                        <div class="code-container">
+                            <button class="copy-btn" id="copyBtn2">
+                                <i class="fa fa-copy"></i> 复制
+                            </button>
+                            <div class="code-block" id="responseBlock"><span class="loading">加载中</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/component/layui/layui.js"></script>
+    <script src="/static/component/pear/pear.js"></script>
+    <script>
+        layui.use(['element', 'layer', 'jquery'], function(){
+            var element = layui.element;
+            var layer = layui.layer;
+            var $ = layui.$;
+
+            // 从URL中获取id参数
+            function getUrlParam(name) {
+                var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+                var r = window.location.search.substr(1).match(reg);
+                if (r != null) return decodeURIComponent(r[2]);
+                return null;
+            }
+
+            // 代码高亮处理
+            function highlightCode(code, isJson) {
+                if (!code) return '';
+
+                // 对JSON进行特殊处理
+                if (isJson) {
+                    try {
+                        // 先格式化JSON
+                        code = JSON.stringify(JSON.parse(code), null, 2);
+                    } catch (e) {
+                        // 不是标准JSON则不格式化
+                    }
+                }
+
+                // 简单的代码高亮规则
+                code = code
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/(".*?"|'.*?')/g, '<span class="code-string">$1</span>')
+                    .replace(/\b(\d+)\b/g, '<span class="code-number">$1</span>')
+                    .replace(/\/\*.*?\*\//g, '<span class="code-comment">$&</span>')
+                    .replace(/\/\/.*$/gm, '<span class="code-comment">$&</span>')
+                    .replace(/\b(GET|POST|PUT|DELETE|HEAD|OPTIONS)\b/g, '<span class="code-keyword">$1</span>')
+                    .replace(/\b(Http|Host|Content-Type|Accept|User-Agent)\b/g, '<span class="code-function">$1</span>');
+
+                return code;
+            }
+
+            // 从接口获取数据
+            function loadApiDetail() {
+                // 获取URL中的id参数
+                var apiId = getUrlParam('id');
+
+                // 验证id是否存在
+                if (!apiId) {
+                    layer.msg('缺少接口ID参数', {icon: 2});
+                    return;
+                }
+
+                // 显示加载动画
+                var loading = layer.load(2);
+
+                // 调用接口获取数据
+                $.ajax({
+                    url: '/api/api/detail?id=' + apiId,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(result) {
+                        layer.close(loading);
+
+                        // 检查返回数据是否完整
+                        if (result.code !== 200) {
+                            layer.msg('接口返回数据错误', {icon: 2});
+                            return;
+                        }
+                        apiData = result.data
+
+                        // 更新页面数据
+                        document.getElementById('apiPath').textContent = apiData.apiPath || '无数据';
+                        document.getElementById('describe').textContent = apiData.describe || '无数据';
+                        document.getElementById('department').textContent = apiData.department || '无数据';
+                        document.getElementById('businessline').textContent = apiData.businessline || '无数据';
+                        document.getElementById('createAt').textContent = apiData.createAt || '无数据';
+                        document.getElementById('updateAt').textContent = apiData.updateAt || '无数据';
+
+                        // 更新请求响应内容（添加代码高亮）
+                        var requestBlock = document.getElementById('requestBlock');
+                        requestBlock.innerHTML = apiData.request ?
+                            highlightCode(apiData.request, false) : '<span class="loading">无请求数据</span>';
+
+                        var responseBlock = document.getElementById('responseBlock');
+                        responseBlock.innerHTML = apiData.response ?
+                            highlightCode(apiData.response, true) : '<span class="loading">无响应数据</span>';
+                    },
+                    error: function(xhr, status, error) {
+                        layer.close(loading);
+                        // 显示错误信息
+                        var errorMsg = '获取接口详情失败: ' + (error || '网络错误');
+                        layer.msg(errorMsg, {icon: 2});
+
+                        // 更新页面显示错误状态
+                        $('.loading').text('加载失败').removeClass('loading');
+                    }
+                });
+            }
+
+            // 复制代码功能
+            $('#copyBtn1').click(function() {
+                var content = document.getElementById('requestBlock').textContent;
+                navigator.clipboard.writeText(content).then(function() {
+                    layer.msg('请求内容复制成功', {icon: 1, time: 1000});
+                }, function() {
+                    layer.msg('复制失败，请手动复制', {icon: 2, time: 1500});
+                });
+            });
+
+            $('#copyBtn2').click(function() {
+                var content = document.getElementById('responseBlock').textContent;
+                navigator.clipboard.writeText(content).then(function() {
+                    layer.msg('响应内容复制成功', {icon: 1, time: 1000});
+                }, function() {
+                    layer.msg('复制失败，请手动复制', {icon: 2, time: 1500});
+                });
+            });
+
+            // 初始化标签页
+            element.render('tab', 'detailTab');
+
+            // 页面加载时获取数据
+            loadApiDetail();
+        });
+    </script>
+</body>
+</html>

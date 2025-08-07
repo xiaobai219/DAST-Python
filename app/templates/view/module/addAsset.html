@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>应用资产</title>
+  <link rel="stylesheet" href="/static/component/pear/css/pear.css" />
+  <link rel="stylesheet" href="/static/component/layui/css/font-awesome.min.css">
+  <style>
+    body {
+      background-color: #f5f7fa;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      padding: 20px;
+    }
+
+    .layuimini-main {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      padding: 25px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .form-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #f0f2f5;
+      display: flex;
+      align-items: center;
+    }
+
+    .form-title i {
+      color: #1E9FFF;
+      margin-right: 8px;
+    }
+
+    .layui-form-item {
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+    }
+
+    .layui-form-label {
+      width: 100px;
+      padding: 10px 15px;
+      color: #666;
+      font-weight: 500;
+      text-align: right;
+      position: relative;
+    }
+
+    .layui-form-label b {
+      color: #f56c6c;
+      margin-right: 4px;
+    }
+
+    .layui-input-block {
+      margin-left: 120px;
+      flex: 1;
+    }
+
+    .layui-input, .layui-select {
+      width: 100%;
+      height: 38px;
+      padding: 0 10px;
+      border: 1px solid #dcdfe6;
+      border-radius: 4px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .layui-input:focus, .layui-select:focus {
+      border-color: #1E9FFF;
+      box-shadow: 0 0 0 2px rgba(30, 159, 255, 0.2);
+      outline: none;
+    }
+
+    .layui-btn {
+      height: 38px;
+      line-height: 38px;
+      padding: 0 20px;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .layui-btn-normal {
+      background-color: #1E9FFF;
+      border-color: #1E9FFF;
+      color: #fff;
+    }
+
+    .layui-btn-normal:hover {
+      background-color: #0aa1ed;
+      border-color: #0aa1ed;
+    }
+
+    .layui-btn-disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .form-actions {
+      margin-top: 30px;
+      padding-top: 15px;
+      border-top: 1px solid #f0f2f5;
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+    }
+
+    .form-hint {
+      color: #909399;
+      font-size: 12px;
+      margin-top: 5px;
+      display: block;
+    }
+
+    @media (max-width: 768px) {
+      .layuimini-main {
+        padding: 15px;
+      }
+
+      .layui-form-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .layui-form-label {
+        width: 100%;
+        text-align: left;
+        padding: 0 0 5px 0;
+        margin-bottom: 5px;
+      }
+
+      .layui-input-block {
+        margin-left: 0;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="layuimini-main">
+  <div class="form-title">
+    <i class="fa fa-plus-circle"></i>新增/编辑应用资产
+  </div>
+
+  <form class="layui-form" action="">
+    <div class="layui-form-item">
+      <label class="layui-form-label"><b>*</b>系统名称</label>
+      <div class="layui-input-block">
+        <input type="text" name="assetName" class="layui-input assetName" placeholder="请输入系统名称">
+      </div>
+    </div>
+
+    <div class="layui-form-item">
+      <label class="layui-form-label"><b>*</b>URL</label>
+      <div class="layui-input-block">
+        <input type="text" name="url" class="layui-input url" lay-verify="required" placeholder="请输入应用URL">
+      </div>
+    </div>
+
+    <div class="layui-form-item">
+      <label class="layui-form-label"><b>*</b>内外网</label>
+      <div class="layui-input-block">
+        <select name="event" id="insideOroutside-select" lay-search="" lay-verify="required">
+            <option value=""></option>
+            <option value="内网">内网</option>
+            <option value="外网">外网</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="layui-form-item">
+      <label class="layui-form-label">部门</label>
+      <div class="layui-input-block">
+        <input type="text" name="department" class="layui-input department" placeholder="请输入所属部门">
+      </div>
+    </div>
+
+    <div class="layui-form-item">
+      <label class="layui-form-label">业务线</label>
+      <div class="layui-input-block">
+        <input type="text" name="businessline" class="layui-input businessline" placeholder="请输入所属业务线">
+      </div>
+    </div>
+
+    <div class="layui-form-item">
+      <label class="layui-form-label">应用负责人</label>
+      <div class="layui-input-block">
+        <input type="text" name="owner" class="layui-input owner" placeholder="请输入负责人姓名">
+      </div>
+    </div>
+
+    <div class="layui-form-item">
+      <label class="layui-form-label">技术栈</label>
+      <div class="layui-input-block">
+        <input type="text" name="technologyStack" placeholder="例如：java,springboot" class="layui-input technologyStack">
+        <span class="form-hint">多个技术栈用逗号分隔</span>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="layui-btn layui-btn-primary" id="cancelBtn">
+        <i class="fa fa-times"></i>取消
+      </button>
+      <button class="layui-btn layui-btn-normal" lay-submit="" lay-filter="addBtn" id="addBtn">
+        <i class="fa fa-check"></i>提交资产
+      </button>
+    </div>
+  </form>
+</div>
+
+<script src="/static/component/layui/layui.js"></script>
+<script src="/static/component/pear/pear.js"></script>
+<script>
+  layui.use(['form','layer', 'jquery'], function () {
+    var form = layui.form;
+    var layer = layui.layer;
+    var $ = layui.jquery;
+
+    // 从URL获取ID参数
+    function getUrlParam(name) {
+        var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+        var r = window.location.search.substr(1).match(reg);
+        if (r != null) return unescape(r[2]);
+        return null;
+    }
+
+    // 获取当前编辑的ID
+    var id = getUrlParam('id');
+
+    // 取消按钮事件
+    $('#cancelBtn').on('click', function() {
+      var iframeIndex = parent.layer.getFrameIndex(window.name);
+      parent.layer.close(iframeIndex);
+      return false;
+    });
+
+    form.on('submit(addBtn)', function() {
+      var requestData = {}
+      if(id) {
+        requestData = {
+          "id": id,
+          "assetName": $(".assetName").val(),
+          "url": $(".url").val(),
+          "department": $(".department").val(),
+          "businessline": $(".businessline").val(),
+          "technologyStack": $(".technologyStack").val(),
+          "insideOroutside": $('#insideOroutside-select option:selected').text(),
+          "owner": $(".owner").val()
+      };
+      } else {
+        requestData = {
+          "assetName": $(".assetName").val(),
+          "url": $(".url").val(),
+          "department": $(".department").val(),
+          "businessline": $(".businessline").val(),
+          "technologyStack": $(".technologyStack").val(),
+          "insideOroutside": $('#insideOroutside-select option:selected').text(),
+          "owner": $(".owner").val()
+       };
+      }
+
+      if($('#addBtn').hasClass('layui-btn-disabled')){
+        return false;
+      }
+
+      // 简单验证
+      if (!requestData.url) {
+        layer.tips('URL不能为空', '.url', {tips: 1});
+        return false;
+      }
+
+      if (!requestData.insideOroutside) {
+        layer.tips('请选择内外网', '#insideOroutside-select', {tips: 1});
+        return false;
+      }
+
+      $('#addBtn').addClass('layui-btn-disabled').html('<i class="fa fa-spinner fa-spin"></i>提交中...');
+
+      $.ajax({
+        url: "/api/asset/add",
+        data: JSON.stringify(requestData),
+        contentType: 'application/json',
+        type: 'POST',
+        success: function(result) {
+          if (result.code === 200) {
+            var index = layer.msg(result.message, {
+              title: '提示',
+              icon: 1,
+              time: 1500
+            }, function() {
+              window.parent.parent.postMessage('refreshCorpList', '*');
+              parent.layui.table.reload("corpTableId");
+              layer.close(index);
+              var iframeIndex = parent.layer.getFrameIndex(window.name);
+              parent.layer.close(iframeIndex);
+            });
+          } else {
+            layer.alert(result.message, {title: '失败', icon: 2});
+            $('#addBtn').removeClass('layui-btn-disabled').html('<i class="fa fa-check"></i>确认添加');
+          }
+        },
+        error: function (e) {
+          layer.alert('未知错误！！', {title: '错误', icon: 2});
+          $('#addBtn').removeClass('layui-btn-disabled').html('<i class="fa fa-check"></i>确认添加');
+        }
+      });
+
+      return false;
+    });
+
+
+    // 加载数据
+    function loadData() {
+        if (!id) {
+            return
+        }
+
+        var loading = layer.load();
+        $.ajax({
+            url: "/api/asset/get?id=" + id,
+            type: 'GET',
+            success: function(res) {
+                let result = res.data
+                layer.close(loading);
+                if (res.code === 200) {
+                    // 填充基础数据
+                    $('.assetName').val(result.assetName || '');
+                    $('.url').val(result.url || '');
+                    $('.department').val(result.department || '');
+                    $('.businessline').val(result.businessline || '');
+                    $('.owner').val(result.owner || '');
+                    $('.technologyStack').val(result.technologyStack || '');
+                    $('#insideOroutside-select').val(result.insideOroutside || '')
+                    form.render('select');
+                } else {
+                    layer.msg('获取应用数据失败', {icon: 2});
+                }
+            },
+            error: function() {
+                layer.close(loading);
+                layer.msg('加载数据失败', {icon: 2});
+            }
+        });
+    }
+    loadData();
+  });
+</script>
+</body>
+</html>

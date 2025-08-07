@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>工单列表</title>
+    <link rel="stylesheet" href="/static/component/pear/css/pear.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <style>
+        .layui-form-label{
+            width: 70px;
+            padding: 9px 5px;
+        }
+        /* 风险等级样式 */
+        .risk-level {
+          display: inline-block;
+          padding: 2px 8px;
+          border-radius: 4px;
+          color: white;
+          font-weight: 500;
+          line-height: 20px;
+        }
+        .risk-severe {
+          background-color: #c9302c; /* 深红色 - 严重 */
+        }
+        .risk-high {
+          background-color: #d9534f; /* 红色 - 高危 */
+        }
+        .risk-medium {
+          background-color: #f0ad4e; /* 黄色 - 中危 */
+        }
+        .risk-low {
+          background-color: #5cb85c; /* 绿色 - 低危 */
+        }
+
+        /* 抽屉容器样式 */
+        .drawer-container {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            overflow: hidden;
+        }
+
+        /* 抽屉面板样式 */
+        .drawer-panel {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 800px;
+            height: 100%;
+            background-color: #fff;
+            box-shadow: -5px 0 25px rgba(0, 0, 0, 0.15);
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: auto;
+            overflow-y: auto;
+            box-sizing: border-box;
+            border-top-left-radius: 12px;
+            border-bottom-left-radius: 12px;
+        }
+
+        .drawer-container.open .drawer-panel {
+            transform: translateX(0);
+        }
+
+        /* 遮罩层样式 */
+        .drawer-mask {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .drawer-container.open .drawer-mask {
+            opacity: 1;
+            pointer-events: auto;
+            backdrop-filter: blur(2px);
+        }
+
+        /* 抽屉头部样式 */
+        .drawer-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid #f0f2f5;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #f8f9fa;
+            border-top-left-radius: 12px;
+        }
+
+        .drawer-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+        }
+
+        .drawer-title i {
+            margin-right: 8px;
+            color: #1E9FFF;
+            font-size: 20px;
+        }
+
+        .drawer-close {
+            width: 36px;
+            height: 36px;
+            line-height: 36px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 20px;
+            color: #909399;
+            transition: all 0.2s;
+            border-radius: 50%;
+        }
+
+        .drawer-close:hover {
+            color: #303133;
+            background-color: #f2f3f5;
+        }
+
+        /* 抽屉内容区域 - 关键对齐样式 */
+        .drawer-body {
+            padding: 24px;
+        }
+
+        /* 表单对齐核心样式 */
+        .drawer-form {
+            width: 100%;
+        }
+
+        .drawer-form .layui-form-item {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            clear: both;
+        }
+
+        .drawer-form .layui-form-label {
+            width: 120px;
+            padding: 10px 15px;
+            font-weight: 500;
+            text-align: right;
+            box-sizing: border-box;
+            float: left;
+            margin: 0;
+        }
+
+        .drawer-form .layui-input-block {
+            margin-left: 120px;
+            flex: 1;
+        }
+
+        .drawer-form .layui-input,
+        .drawer-form .layui-select,
+        .drawer-form .layui-textarea {
+            width: 100%;
+            border-radius: 4px;
+            border-color: #dcdfe6;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+        }
+
+        .drawer-form .layui-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .drawer-form .layui-input:focus,
+        .drawer-form .layui-select:focus,
+        .drawer-form .layui-textarea:focus {
+            border-color: #1E9FFF;
+            box-shadow: 0 0 0 2px rgba(30, 159, 255, 0.2);
+            outline: none;
+        }
+
+        /* 抽屉底部按钮区域 */
+        .drawer-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #f0f2f5;
+            text-align: right;
+            background-color: #f8f9fa;
+            border-bottom-left-radius: 12px;
+            margin-top: 10px;
+        }
+
+        /* 按钮样式 */
+        .drawer-footer .layui-btn {
+            margin-left: 10px;
+            border-radius: 4px;
+            padding: 0 20px;
+            height: 38px;
+            line-height: 38px;
+            transition: all 0.2s;
+        }
+
+        .drawer-footer .layui-btn-primary {
+            background-color: #fff;
+            border-color: #dcdfe6;
+            color: #606266;
+        }
+
+        .drawer-footer .layui-btn-primary:hover {
+            background-color: #f5f7fa;
+            border-color: #c0c4cc;
+        }
+
+        .drawer-footer .layui-btn {
+            background-color: #1E9FFF;
+            border-color: #1E9FFF;
+            color: #fff;
+        }
+
+        .drawer-footer .layui-btn:hover {
+            background-color: #0aa1ed;
+            border-color: #0aa1ed;
+        }
+
+        /* 状态标签通用样式 */
+        .status-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #fff;
+            line-height: 1.5;
+        }
+
+        .status-tag.pending-confirm { background-color: #1E9FFF; }
+        .status-tag.pending-fix { background-color: #FF7D00; }
+        .status-tag.pending-retest { background-color: #722ED1; }
+        .status-tag.completed { background-color: #00B42A; }
+        .status-tag.ignored { background-color: #D48806; }
+        .status-tag.duplicated { background-color: #36CFC9; }
+        .status-tag.closed { background-color: #86909C; }
+
+        /* 响应式调整 */
+        @media (max-width: 992px) {
+            .drawer-panel {
+                width: 700px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .drawer-panel {
+                width: 100%;
+                border-radius: 8px 8px 0 0;
+            }
+
+            .drawer-header, .drawer-footer {
+                border-radius: 8px 8px 0 0;
+            }
+
+            .drawer-form .layui-form-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .drawer-form .layui-form-label {
+                width: 100%;
+                text-align: left;
+                padding: 0 0 5px 0;
+                margin-bottom: 5px;
+            }
+
+            .drawer-form .layui-input-block {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body class="pear-container">
+<div class="layui-card">
+    <div class="layui-card-body">
+        <form class="layui-form" action="">
+            <div class="layui-form-item">
+                <div class="layui-form-item layui-inline">
+                    <label class="layui-form-label">风险名称</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="riskName" placeholder="风险名称" class="layui-input riskName">
+                    </div>
+                    <label class="layui-form-label">风险类型</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="riskType" placeholder="风险类型" class="layui-input riskType">
+                    </div>
+                    <label class="layui-form-label">部门</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="department" placeholder="部门" class="layui-input department">
+                    </div>
+                    <label class="layui-form-label">业务线</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="businessline" placeholder="业务线" class="layui-input businessline">
+                    </div>
+                    <label class="layui-form-label">状态</label>
+                    <div class="layui-input-inline">
+                        <select name="status" id="status-select" class="status">
+                            <option value=""></option>
+                            <option value="待确认">待确认</option>
+                            <option value="待修复">待修复</option>
+                            <option value="待复测">待复测</option>
+                            <option value="已完成">已完成</option>
+                            <option value="已忽略">已忽略</option>
+                            <option value="已重复">已重复</option>
+                            <option value="已关闭">已关闭</option>
+                        </select>
+                    </div>
+                    <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="risk-query">
+                        <i class="layui-icon layui-icon-search"></i>
+                        搜索
+                    </button>
+                    <button type="reset" class="pear-btn pear-btn-md">
+                        <i class="layui-icon layui-icon-refresh"></i>
+                        重置
+                    </button>
+                    <button class="pear-btn pear-btn-md layui-border-green" lay-submit lay-filter="risk-export">
+                        <i class="layui-icon layui-icon-download-circle"></i>
+                        导出
+                    </button>
+                </div>
+                <div class="layui-form-item layui-inline">
+                    <label class="layui-form-label">风险等级</label>
+                    <div class="layui-input-inline">
+                        <select name="event" id="riskLevel-select" lay-search="">
+                            <option value=""></option>
+                            <option value="1">严重</option>
+                            <option value="2">高危</option>
+                            <option value="3">中危</option>
+                            <option value="4">低危</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="layui-card">
+    <div class="layui-card-body">
+        <table id="risk-table" lay-filter="risk-table"></table>
+    </div>
+</div>
+
+<script type="text/html" id="risk-toolbar">
+    <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove">
+        <i class="layui-icon layui-icon-delete"></i>
+        删除
+    </button>
+</script>
+
+<!-- 抽屉组件 -->
+<div class="drawer-container" id="drawer">
+    <div class="drawer-mask" id="drawerMask"></div>
+    <div class="drawer-panel">
+        <div class="drawer-header">
+            <div class="drawer-title">
+                <i class="fa fa-edit"></i>编辑工单
+            </div>
+            <div class="drawer-close" id="drawerClose">&times;</div>
+        </div>
+
+        <div class="drawer-body">
+            <!-- 添加专用类名drawer-form确保样式隔离 -->
+            <form class="layui-form drawer-form" lay-filter="editForm">
+                <input type="hidden" name="id" id="dataId">
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">风险名称</label>
+                    <div class="layui-input-block">
+                        <textarea name="r_riskName" placeholder="请输入名称" class="layui-textarea r_riskName" lay-verify="required"></textarea>
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">风险类型</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="r_riskType" lay-verify="required" placeholder="请输入类型" autocomplete="off" class="layui-input r_riskType">
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">风险等级</label>
+                    <div class="layui-input-block">
+                        <select name="r_riskLevel" lay-verify="required" class="r_riskLevel">
+                            <option value=""></option>
+                            <option value="严重">严重</option>
+                            <option value="高危">高危</option>
+                            <option value="中危">中危</option>
+                            <option value="低危">低危</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">部门</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="r_department" lay-verify="required" placeholder="请输入部门" autocomplete="off" class="layui-input r_department">
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">业务线</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="r_businessline" lay-verify="required" placeholder="业务线" autocomplete="off" class="layui-input r_businessline">
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">状态</label>
+                    <div class="layui-input-block">
+                        <select name="r_status" lay-verify="required" class="r_status">
+                            <option value=""></option>
+                            <option value="待确认">待确认</option>
+                            <option value="待修复">待修复</option>
+                            <option value="待复测">待复测</option>
+                            <option value="已完成">已完成</option>
+                            <option value="已忽略">已忽略</option>
+                            <option value="已重复">已重复</option>
+                            <option value="已关闭">已关闭</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">当前处理人</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="r_currentOwner" lay-verify="required" placeholder="请输入当前处理人" class="layui-input r_currentOwner">
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="drawer-footer">
+            <button class="layui-btn layui-btn-primary" id="cancelBtn">
+                <i class="fa fa-times"></i>取消
+            </button>
+            <button class="layui-btn" id="confirmBtn">
+                <i class="fa fa-check"></i>确认
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="/static/component/layui/layui.js"></script>
+<script src="/static/component/pear/pear.js"></script>
+<script>
+    layui.use(['table', 'form', 'jquery'], function() {
+        let table = layui.table;
+        let form = layui.form;
+        let $ = layui.jquery;
+        var currentId = null;
+
+        let cols = [
+            [{
+                type: 'checkbox'
+            },
+                {
+                    title: 'ID',
+                    field: 'id',
+                    align: 'center',
+                    width: 300
+                },
+                {
+                    title: '风险名称',
+                    field: 'riskName',
+                    align: 'center'
+                },
+                {
+                    title: '风险类型',
+                    field: 'riskType',
+                    align: 'center'
+                },
+                {
+                    title: '风险等级',
+                    field: 'riskLevel',
+                    align: 'center',
+                    templet: function(d){
+                      switch(d.riskLevel) {
+                        case '严重': return '<span class="risk-level risk-severe">严重</span>';
+                        case '高危': return '<span class="risk-level risk-high">高危</span>';
+                        case '中危': return '<span class="risk-level risk-medium">中危</span>';
+                        case '低危': return '<span class="risk-level risk-low">低危</span>';
+                        default: return '<span class="risk-level">未知</span>';
+                      }
+                    }
+                },
+                {
+                    title: '部门',
+                    field: 'department',
+                    align: 'center'
+                },
+                {
+                    title: '业务线',
+                    field: 'businessline',
+                    align: 'center',
+                },
+                {
+                    title: '状态',
+                    field: 'status',
+                    align: 'center',
+                    templet: function(d) {
+                        var statusMap = {
+                            '待确认': 'pending-confirm',
+                            '待修复': 'pending-fix',
+                            '待复测': 'pending-retest',
+                            '已完成': 'completed',
+                            '已忽略': 'ignored',
+                            '已重复': 'duplicated',
+                            '已关闭': 'closed'
+                        };
+                        var className = statusMap[d.status] || '';
+                        return '<span class="status-tag ' + className + '">' + d.status + '</span>';
+                    }
+                },
+                {
+                    title: '当前处理人',
+                    field: 'currentOwner',
+                    align: 'center',
+                },
+                {
+                    title: '创建时间',
+                    field: 'createAt',
+                    align: 'center',
+                    width: 200,
+                },
+                {
+                    title: '操作',
+                    field: 'operate',
+                    width: 150,
+                    fixed: 'right',
+                    align: 'center',
+                    templet: function(d){
+                      return `
+                        <button class="layui-btn pear-btn-sm" lay-event="detail">详情</button>
+                        <button class="layui-btn layui-btn-normal pear-btn-sm" lay-event="edit">编辑</button>
+                      `;
+                    }
+                }
+            ]
+        ]
+
+        table.render({
+            elem: '#risk-table',
+            url: '/api/searchWorkOrder',
+            page: true,
+            method: "POST",
+            cols: cols,
+            contentType: 'application/json',
+            skin: 'line',
+            toolbar: '#risk-toolbar',
+            defaultToolbar: [{
+                title: '刷新',
+                layEvent: 'refresh',
+                icon: 'layui-icon-refresh',
+            }, 'filter', 'print', 'exports'],
+            where: {"riskName": $(".riskName").val(),"riskType": $(".riskType").val(), "department": $(".department").val(),"businessline": $(".businessline").val(),"status":$("#status-select option:selected").text(),"riskLevel": $('#riskLevel-select option:selected').text()}
+        });
+
+        table.on('toolbar(risk-table)', function(obj) {
+            if (obj.event === 'add') {
+                window.add();
+            } else if (obj.event === 'refresh') {
+                window.refresh();
+            } else if (obj.event === 'batchRemove') {
+                window.batchRemove(obj);
+            }
+        });
+
+        table.on('tool(risk-table)', function(obj){
+            var data = obj.data;
+            var layEvent = obj.event;
+            if(layEvent === 'detail'){
+                window.open('/view/workOrder/detail?id=' + data.id)
+            } else if(layEvent === 'edit'){
+                currentId = data.id;
+                loadData(data);
+                openDrawer();
+            }
+        });
+
+        form.on('submit(risk-query)', function() {
+            table.reload('risk-table', {
+                where: {"riskName": $(".riskName").val(),"riskType": $(".riskType").val(), "department": $(".department").val(),"businessline": $(".businessline").val(),"status":$("#status-select option:selected").text(),"riskLevel": $('#riskLevel-select option:selected').text()},
+                page: { curr: 1 }
+            })
+            return false;
+        });
+
+        form.on('submit(risk-export)', function() {
+            window.open('/api/common/export?type=risk')
+            return false;
+        });
+
+        // 抽屉操作
+        var $drawer = $('#drawer');
+
+        function openDrawer() {
+            $drawer.addClass('open');
+            $('body').css('overflow', 'hidden');
+        }
+
+        function closeDrawer() {
+            $drawer.removeClass('open');
+            $('body').css('overflow', 'auto');
+            // 重置表单
+            $('.r_riskName, .r_riskType, .r_department, .r_businessline, .r_currentOwner').val('');
+            form.val('editForm', { 'r_riskLevel': '', 'r_status':'' });
+            form.render('select');
+            currentId = null;
+        }
+
+        $('#drawerClose, #drawerMask, #cancelBtn').on('click', closeDrawer);
+
+        function loadData(data) {
+            if(!data){
+                layer.msg('数据为空', {icon: 2, time:1000});
+                return;
+            }
+            currentId = data.id;
+            $('#dataId').val(data.id);
+
+            $('.r_riskName').val(data['riskName']);
+            $('.r_riskType').val(data['riskType']);
+            $('.r_department').val(data['department']);
+            $('.r_businessline').val(data['businessline']);
+            $('.r_currentOwner').val(data['currentOwner']);
+            form.val('editForm', {
+               'r_riskLevel': data['riskLevel'],
+               'r_status': data['status']
+            });
+            form.render('select');
+        }
+
+        $('#confirmBtn').on('click', function() {
+            if(!currentId){
+                layer.msg('id为空', {icon: 2, time:1000});
+                return;
+            }
+            let data = {
+                'id': currentId,
+                'riskName': $('.r_riskName').val(),
+                'riskType': $('.r_riskType').val(),
+                'department': $('.r_department').val(),
+                'businessline': $('.r_businessline').val(),
+                'currentOwner': $('.r_currentOwner').val(),
+                "riskLevel": $('.r_riskLevel option:selected').text(),
+                "status": $('.r_status option:selected').text()
+            };
+
+            $.ajax({
+                url: "/api/workOrder/update",
+                data: JSON.stringify(data),
+                contentType: 'application/json',
+                method: "POST",
+                success: function(result) {
+                    if (result.code === 200) {
+                        layer.msg(result.message, {icon: 1, time: 1000});
+                        closeDrawer();
+                        table.reload('risk-table', {
+                            where: {"riskName": $(".riskName").val(),"riskType": $(".riskType").val(), "department": $(".department").val(),"businessline": $(".businessline").val(),"status":$("#status-select option:selected").text(),"riskLevel": $('#riskLevel-select option:selected').text()}
+                        })
+                    } else {
+                        layer.msg(result.message, {icon: 2, time: 1000});
+                    }
+                }
+            })
+        });
+
+        window.batchRemove = function(obj) {
+            var checkStatus = table.checkStatus('risk-table');
+            var data = checkStatus.data;
+
+            if (data.length === 0) {
+                layer.msg("未选中数据", {icon: 3, time: 1000});
+                return false;
+            }
+
+            var ids = data.map(item => item.id);
+
+            layer.confirm('确定要删除这些工单吗？', {icon: 3, title: '提示'}, function(index) {
+                layer.close(index);
+                let loading = layer.load();
+                $.ajax({
+                    url: "/api/workOrder/deleteById",
+                    data: JSON.stringify(ids),
+                    contentType: 'application/json',
+                    method: "POST",
+                    success: function(result) {
+                        layer.close(loading);
+                        if (result.code === 200) {
+                            layer.msg(result.message, {icon: 1, time: 1000}, function() {
+                                table.reload('risk-table', {
+                                    where: {"riskName": $(".riskName").val(),"riskType": $(".riskType").val(), "department": $(".department").val(),"businessline": $(".businessline").val(),"status":$("#status-select option:selected").text(),"riskLevel": $('#riskLevel-select option:selected').text()}
+                                })
+                            });
+                        } else {
+                            layer.msg(result.message, {icon: 2, time: 1000});
+                        }
+                    }
+                })
+            });
+        }
+
+        window.refresh = function() {
+            table.reload('risk-table');
+        }
+    })
+</script>
+</body>
+</html>

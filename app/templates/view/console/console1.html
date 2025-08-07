@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>数据概览</title>
+    <link rel="stylesheet" href="/static/component/pear/css/pear.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <style>
+        :root {
+            --primary: #1E9FFF;
+            --success: #00B42A;
+            --warning: #FF7D00;
+            --danger: #F56C6C;
+            --light-bg: #f5f7fa;
+            --card-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+            --card-shadow-hover: 0 6px 16px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            padding: 0;
+            margin: 0;
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .dashboard-container {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .dashboard-header {
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dashboard-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2d3d;
+            display: flex;
+            align-items: center;
+        }
+
+        .dashboard-title i {
+            margin-right: 10px;
+            color: var(--primary);
+            font-size: 28px;
+        }
+
+        .panel-card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 25px;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .panel-card:hover {
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        .panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f2f3f5;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2d3d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .panel-body {
+            padding: 20px;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .data-card {
+            padding: 25px 20px;
+            border-radius: 8px;
+            background-color: #fff;
+            text-align: center;
+            transition: var(--transition);
+            border: 1px solid #f2f3f5;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .data-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+
+        .data-card:nth-child(1)::before {
+            background-color: var(--primary);
+        }
+
+        .data-card:nth-child(2)::before {
+            background-color: var(--success);
+        }
+
+        .data-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-shadow-hover);
+            border-color: transparent;
+        }
+
+        .data-icon {
+            font-size: 32px;
+            margin-bottom: 15px;
+            color: var(--primary);
+            transition: var(--transition);
+        }
+
+        .data-card:nth-child(2) .data-icon {
+            color: var(--success);
+        }
+
+        .data-card:hover .data-icon {
+            transform: scale(1.1);
+        }
+
+        .data-value {
+            font-size: 36px;
+            font-weight: 600;
+            margin: 10px 0;
+            color: #1f2d3d;
+            position: relative;
+            display: inline-block;
+        }
+
+        .data-value::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 10%;
+            width: 80%;
+            height: 2px;
+            background-color: rgba(30, 159, 255, 0.1);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .data-card:hover .data-value::after {
+            transform: scaleX(1);
+        }
+
+        .data-label {
+            font-size: 14px;
+            color: #606266;
+            margin-top: 10px;
+        }
+
+        .data-trend {
+            display: inline-flex;
+            align-items: center;
+            font-size: 13px;
+            margin-top: 10px;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+
+        .trend-up {
+            color: var(--success);
+            background-color: rgba(0, 180, 42, 0.1);
+        }
+
+        .trend-down {
+            color: var(--danger);
+            background-color: rgba(245, 108, 108, 0.1);
+        }
+
+        .chart-container {
+            height: 350px;
+            width: 100%;
+            position: relative;
+        }
+
+        /* 加载状态样式 */
+        .loading {
+            color: #909399;
+            font-style: italic;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(30, 159, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 按钮样式 */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            background-color: #f5f7fa;
+            border: 1px solid #e6e6e6;
+            border-radius: 4px;
+            color: #606266;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            background-color: #e9ecef;
+            color: var(--primary);
+            border-color: #dcdfe6;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            background-color: #0aa1ed;
+            color: #fff;
+            border-color: #0aa1ed;
+        }
+
+        /* 图表筛选器样式 */
+        .chart-filter {
+            padding: 6px 12px;
+            background-color: #fff;
+            border: 1px solid #e6e6e6;
+            border-radius: 4px;
+            color: #606266;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 14px;
+        }
+
+        .chart-filter:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* 图表工具提示 */
+        .chart-tooltip {
+            position: absolute;
+            padding: 10px 15px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            border-radius: 4px;
+            font-size: 13px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 100;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .data-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-container {
+                height: 250px;
+            }
+
+            .panel-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .panel-header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">
+                <i class="fa fa-dashboard"></i>数据概览
+            </h1>
+            <div>
+                <button class="btn btn-primary" id="refreshBtn">
+                    <i class="fa fa-refresh"></i> 刷新数据
+                </button>
+            </div>
+        </div>
+
+        <!-- 第一个模块：数据展示模块 -->
+        <div class="panel-card">
+            <div class="panel-header">
+                <span>核心数据指标</span>
+                <div class="panel-header-actions">
+                    <select class="chart-filter" id="timeRangeFilter">
+                        <option value="5">近5天</option>
+                        <option value="7">近7天</option>
+                        <option value="30">近30天</option>
+                    </select>
+                </div>
+            </div>
+            <div class="panel-body">
+                <div class="data-grid">
+                    <div class="data-card">
+                        <div class="data-icon">
+                            <i class="fa fa-cubes"></i>
+                        </div>
+                        <div class="data-value" id="asset_count">
+                            <span class="loading"><span class="loading-spinner"></span>加载中...</span>
+                        </div>
+                        <div class="data-label">应用资产数量</div>
+                        <div class="data-trend trend-up" id="asset_trend">
+                            <i class="fa fa-arrow-up"></i> 5.2%
+                        </div>
+                    </div>
+                    <div class="data-card">
+                        <div class="data-icon">
+                            <i class="fa fa-exchange"></i>
+                        </div>
+                        <div class="data-value" id="api_count">
+                            <span class="loading"><span class="loading-spinner"></span>加载中...</span>
+                        </div>
+                        <div class="data-label">接口资产数量</div>
+                        <div class="data-trend trend-up" id="api_trend">
+                            <i class="fa fa-arrow-up"></i> 12.8%
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 第二个模块：工单数量图表 -->
+        <div class="panel-card">
+            <div class="panel-header">
+                <span>工单数量趋势</span>
+                <div class="panel-header-actions">
+                    <button class="btn" id="ticketChartRefresh">
+                        <i class="fa fa-refresh"></i> 刷新
+                    </button>
+                </div>
+            </div>
+            <div class="panel-body">
+                <div class="chart-container">
+                    <canvas id="workOrderChart"></canvas>
+                    <div class="chart-tooltip" id="ticketTooltip"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 第三个模块：扫描接口数量图表 -->
+        <div class="panel-card">
+            <div class="panel-header">
+                <span>扫描接口数量趋势</span>
+                <div class="panel-header-actions">
+                    <button class="btn" id="scanChartRefresh">
+                        <i class="fa fa-refresh"></i> 刷新
+                    </button>
+                </div>
+            </div>
+            <div class="panel-body">
+                <div class="chart-container">
+                    <canvas id="scanApiChart"></canvas>
+                    <div class="chart-tooltip" id="scanTooltip"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/component/layui/layui.js"></script>
+    <script src="/static/component/pear/pear.js"></script>
+    <script src="/static/component/layui/chart.umd.min.js"></script>
+    <script>
+        layui.use(['jquery', 'layer'], function() {
+            var $ = layui.$;
+            var layer = layui.layer;
+
+            // 时间范围，默认近5天
+            var timeRange = 5;
+
+            // 从接口获取资产数量数据
+            function loadAssetCount() {
+                // 显示加载动画
+                var loading = layer.load(2);
+
+                $.ajax({
+                    url: '/api/assetApi/count?range=' + timeRange,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(result) {
+                        layer.close(loading);
+                        let res = result.data;
+                        if (res && res.asset_count !== undefined && res.api_count !== undefined) {
+                            // 更新数据展示，使用本地化格式显示数字
+                            $('#asset_count').text(res.asset_count.toLocaleString());
+                            $('#api_count').text(res.api_count.toLocaleString());
+
+                            // 更新趋势数据
+                            updateTrendData(res);
+                        } else {
+                            $('#asset_count').text('数据错误');
+                            $('#api_count').text('数据错误');
+                            layer.msg('获取数据格式错误', {icon: 2});
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        layer.close(loading);
+                        $('#asset_count').text('加载失败');
+                        $('#api_count').text('加载失败');
+                        layer.msg('获取数据失败: ' + error, {icon: 2});
+                    }
+                });
+            }
+
+            // 更新趋势数据
+            function updateTrendData(res) {
+                // 假设接口返回趋势数据，这里使用模拟数据
+                const trends = {
+                    asset: res.asset_trend || 5.2,
+                    api: res.api_trend || 12.8
+                };
+
+                // 更新资产趋势
+                $('#asset_trend').html(trends.asset >= 0
+                    ? `<i class="fa fa-arrow-up"></i> ${Math.abs(trends.asset)}%`
+                    : `<i class="fa fa-arrow-down"></i> ${Math.abs(trends.asset)}%`);
+
+                $('#asset_trend').removeClass('trend-up trend-down')
+                    .addClass(trends.asset >= 0 ? 'trend-up' : 'trend-down');
+
+                // 更新接口趋势
+                $('#api_trend').html(trends.api >= 0
+                    ? `<i class="fa fa-arrow-up"></i> ${Math.abs(trends.api)}%`
+                    : `<i class="fa fa-arrow-down"></i> ${Math.abs(trends.api)}%`);
+
+                $('#api_trend').removeClass('trend-up trend-down')
+                    .addClass(trends.api >= 0 ? 'trend-up' : 'trend-down');
+            }
+
+            // 从接口获取工单数量统计
+            function loadWorkOrderStats() {
+                $.ajax({
+                    url: '/api/workOrder/count?range=' + timeRange,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            workOrderChart.data.labels = res.data.dates;
+                            workOrderChart.data.datasets[0].data = res.data.counts;
+                            workOrderChart.update();
+                        } else {
+                            layer.msg('获取工单数据失败: ' + res.message, {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('获取工单数据失败', {icon: 2});
+                    }
+                });
+            }
+
+            // 从接口获取扫描接口数量统计
+            function loadScanApiStats() {
+                $.ajax({
+                    url: '/api/api/count?range=' + timeRange,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            scanApiChart.data.labels = res.data.dates;
+                            scanApiChart.data.datasets[0].data = res.data.counts;
+                            scanApiChart.update();
+                        } else {
+                            layer.msg('获取扫描数据失败: ' + res.message, {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('获取扫描数据失败', {icon: 2});
+                    }
+                });
+            }
+
+            // 刷新所有数据
+            function refreshAllData() {
+                // 添加按钮加载效果
+                const $refreshBtn = $('#refreshBtn');
+                const originalText = $refreshBtn.html();
+                $refreshBtn.html('<i class="fa fa-spinner fa-spin"></i> 加载中...')
+                           .prop('disabled', true);
+
+                loadAssetCount();
+                loadWorkOrderStats();
+                loadScanApiStats();
+
+                // 恢复按钮状态
+                setTimeout(() => {
+                    $refreshBtn.html(originalText)
+                               .prop('disabled', false);
+                }, 800);
+            }
+
+            // 初始化工单数量图表
+            var workOrderCtx = document.getElementById('workOrderChart').getContext('2d');
+            var workOrderChart = new Chart(workOrderCtx, {
+                type: 'bar',
+                data: {
+                    labels: Array(timeRange).fill(''),
+                    datasets: [{
+                        label: '工单数量',
+                        data: Array(timeRange).fill(0),
+                        backgroundColor: 'rgba(30, 159, 255, 0.7)',
+                        borderColor: 'rgba(30, 159, 255, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeOutQuart'
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            title: {
+                                display: true,
+                                text: '数量',
+                                font: {
+                                    weight: 'normal'
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: '日期',
+                                font: {
+                                    weight: 'normal'
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                            padding: 10,
+                            cornerRadius: 4,
+                            titleFont: {
+                                size: 14
+                            },
+                            bodyFont: {
+                                size: 13
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                }
+            });
+
+            // 初始化扫描接口数量图表
+            var scanApiCtx = document.getElementById('scanApiChart').getContext('2d');
+            var scanApiChart = new Chart(scanApiCtx, {
+                type: 'bar',
+                data: {
+                    labels: Array(timeRange).fill(''),
+                    datasets: [{
+                        label: '扫描接口数量',
+                        data: Array(timeRange).fill(0),
+                        backgroundColor: 'rgba(0, 180, 42, 0.7)',
+                        borderColor: 'rgba(0, 180, 42, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeOutQuart'
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            title: {
+                                display: true,
+                                text: '数量',
+                                font: {
+                                    weight: 'normal'
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: '日期',
+                                font: {
+                                    weight: 'normal'
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                            padding: 10,
+                            cornerRadius: 4
+                        }
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                }
+            });
+
+            // 事件监听
+            $('#refreshBtn').on('click', refreshAllData);
+            $('#ticketChartRefresh').on('click', loadWorkOrderStats);
+            $('#scanChartRefresh').on('click', loadScanApiStats);
+
+            // 时间范围筛选
+            $('#timeRangeFilter').on('change', function() {
+                timeRange = parseInt($(this).val());
+                refreshAllData();
+            });
+
+            // 页面加载完成后获取数据
+            refreshAllData();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+mitmproxy
+requests
+flask
+flask-sqlalchemy
+pymysql
+openpyxl

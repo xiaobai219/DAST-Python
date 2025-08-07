@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>工单详情</title>
+  <!-- 引入layui CSS -->
+  <link rel="stylesheet" href="/static/component/pear/css/pear.css" />
+  <link rel="stylesheet" href="/static/component/layui/css/font-awesome.min.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f5f7fa;
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      color: #333;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    /* 页面头部样式 */
+    .page-header {
+      padding: 25px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .page-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: #1f2d3d;
+      margin: 0;
+      display: flex;
+      align-items: center;
+    }
+    .page-title i {
+      margin-right: 10px;
+      color: #1E9FFF;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+    }
+    .action-buttons .layui-btn {
+      border-radius: 4px;
+      transition: all 0.2s ease;
+    }
+    .action-buttons .layui-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .module-card {
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      width: 100%;
+      background-color: white;
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .module-card:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+    .module-title {
+      padding: 16px 20px;
+      border-bottom: 1px solid #f2f3f5;
+      font-size: 16px;
+      font-weight: 600;
+      color: #1f2d3d;
+      display: flex;
+      align-items: center;
+    }
+    .module-title i {
+      margin-right: 8px;
+      color: #1E9FFF;
+    }
+    .module-content {
+      padding: 24px;
+    }
+
+    /* 信息行样式 */
+    .info-row {
+      display: flex;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .info-item {
+      flex: 1;
+      min-width: 250px;
+      margin-bottom: 12px;
+      padding-right: 15px;
+      box-sizing: border-box;
+    }
+    .info-label {
+      display: inline-block;
+      width: 110px;
+      color: #606266;
+      font-weight: 500;
+    }
+    .info-value {
+      color: #303133;
+      padding: 2px 0;
+    }
+
+    /* 风险等级样式 */
+    .risk-level {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 4px;
+      color: white;
+      font-weight: 500;
+      font-size: 13px;
+      line-height: 1;
+    }
+    .risk-severe {
+      background-color: #c9302c; /* 深红色 - 严重 */
+    }
+    .risk-high {
+      background-color: #d9534f; /* 红色 - 高危 */
+    }
+    .risk-medium {
+      background-color: #f0ad4e; /* 黄色 - 中危 */
+    }
+    .risk-low {
+      background-color: #5cb85c; /* 绿色 - 低危 */
+    }
+
+    /* 流程相关样式 */
+    .flow-wrapper {
+      position: relative;
+      padding: 30px 0;
+    }
+    .flow-track {
+      position: absolute;
+      top: 20px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background-color: #e5e6eb;
+      z-index: 1;
+    }
+    .flow-track-progress {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      background-color: #52c41a;
+      transition: width 0.5s ease;
+      z-index: 2;
+    }
+    .flow-container {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      z-index: 3;
+      padding: 0 10px;
+    }
+    .flow-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      width: 100px;
+    }
+    .flow-node-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+      font-size: 18px;
+      transition: all 0.3s ease;
+    }
+    .flow-node-text {
+      font-size: 14px;
+      color: #86909c;
+      text-align: center;
+      white-space: nowrap;
+      transition: all 0.3s ease;
+    }
+    .flow-node.completed .flow-node-icon {
+      background-color: #f0f9eb;
+      color: #52c41a;
+      border: 2px solid #52c41a;
+    }
+    .flow-node.completed .flow-node-text {
+      color: #52c41a;
+      font-weight: 500;
+    }
+    .flow-node.active .flow-node-icon {
+      background-color: #52c41a;
+      color: white;
+      box-shadow: 0 0 0 4px rgba(82, 196, 26, 0.2);
+    }
+    .flow-node.active .flow-node-text {
+      color: #52c41a;
+      font-weight: 600;
+    }
+    .flow-node.pending .flow-node-icon {
+      background-color: #f2f3f5;
+      color: #c9cdD4;
+      border: 2px solid #e5e6eb;
+    }
+    .flow-node.special .flow-node-icon {
+      background-color: #fff2e8;
+      color: #fa8c16;
+      border: 2px solid #fa8c16;
+    }
+    .flow-node.special .flow-node-text {
+      color: #fa8c16;
+      font-weight: 500;
+    }
+
+    /* 流程操作按钮 */
+    .flow-actions {
+      text-align: center;
+      margin-top: 30px;
+    }
+    #nextStepBtn {
+      padding: 0 24px;
+      height: 40px;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 4px;
+      background-color: #1E9FFF;
+      border-color: #1E9FFF;
+      transition: all 0.2s ease;
+    }
+    #nextStepBtn:hover {
+      background-color: #0aa1ed;
+      border-color: #0aa1ed;
+      transform: translateY(-2px);
+      box-shadow: 0 2px 8px rgba(30, 159, 255, 0.3);
+    }
+    #nextStepBtn:disabled {
+      background-color: #a0cfff;
+      border-color: #a0cfff;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* 流量对比样式 */
+    .traffic-container {
+      display: flex;
+      gap: 20px;
+      overflow: hidden;
+    }
+    .traffic-panel {
+      flex: 1;
+      border: 1px solid #e6e6e6;
+      border-radius: 6px;
+      min-width: 0; /* 解决flex容器下内容溢出问题 */
+      display: flex;
+      flex-direction: column; /* 使用flex布局确保内容区域自适应 */
+      transition: border-color 0.2s ease;
+    }
+    .traffic-panel:hover {
+      border-color: #c9cdd4;
+    }
+    .traffic-header {
+      padding: 12px 15px;
+      background-color: #f7f8fa;
+      border-bottom: 1px solid #e6e6e6;
+      font-weight: 500;
+      font-size: 14px;
+      color: #1f2d3d;
+      display: flex;
+      align-items: center;
+    }
+    .traffic-header i {
+      margin-right: 8px;
+      color: #86909c;
+    }
+    .traffic-content {
+      padding: 15px;
+      max-height: 400px;
+      overflow-y: auto;
+      overflow-x: auto;
+      background-color: #fafafa;
+    }
+    .traffic-section {
+      margin-bottom: 20px;
+    }
+    .traffic-section-title {
+      margin-bottom: 10px;
+      font-weight: 500;
+      color: #4e5969;
+      padding-bottom: 5px;
+      border-bottom: 1px dashed #e6e6e6;
+      font-size: 14px;
+    }
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      line-height: 1.5;
+      margin: 0;
+      font-size: 13px;
+      color: #303133;
+      background-color: #f5f5f5;
+      padding: 12px;
+      border-radius: 4px;
+      border: 1px solid #eee;
+    }
+    .diff {
+      color: #f5222d;
+      font-weight: bold;
+    }
+
+    /* 修复建议样式 */
+    .suggestion-content {
+      padding: 20px;
+      border: 1px solid #ffe58f;
+      border-radius: 6px;
+      min-height: 100px;
+      line-height: 1.8;
+      background-color: #fffbf0;
+      color: #854d27;
+      font-size: 14px;
+    }
+    .suggestion-content p {
+      margin: 0 0 12px 0;
+      position: relative;
+      padding-left: 24px;
+    }
+    .suggestion-content p:last-child {
+      margin-bottom: 0;
+    }
+    .suggestion-content p::before {
+      content: "•";
+      position: absolute;
+      left: 8px;
+      color: #fa8c16;
+      font-weight: bold;
+    }
+
+    /* 加载状态 */
+    .loading {
+      text-align: center;
+      padding: 80px 0;
+      color: #666;
+      background-color: white;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    .loading i {
+      font-size: 36px;
+      color: #1E9FFF;
+      margin-bottom: 15px;
+      animation: spin 1.5s linear infinite;
+    }
+    .loading p {
+      margin: 0;
+      color: #86909c;
+      font-size: 14px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* 响应式设计 */
+    @media (max-width: 992px) {
+      .info-item {
+        min-width: 200px;
+      }
+      .traffic-container {
+        flex-direction: column;
+      }
+      .flow-node {
+        width: 80px;
+      }
+      .flow-node-text {
+        font-size: 12px;
+      }
+    }
+    @media (max-width: 768px) {
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+      }
+      .action-buttons {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+      .info-item {
+        flex: 100%;
+        min-width: auto;
+      }
+      .module-content {
+        padding: 15px;
+      }
+      .flow-container {
+        flex-wrap: wrap;
+      }
+      .flow-node {
+        width: 45%;
+        margin-bottom: 20px;
+      }
+      .flow-node:last-child {
+        margin-bottom: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div style="padding-bottom: 50px;" id="contentContainer">
+      <!-- 加载状态 -->
+      <div class="loading" id="loading">
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <p>正在加载工单详情...</p>
+      </div>
+
+      <!-- 内容区域（初始隐藏，加载完成后显示） -->
+      <div id="workOrderContent" style="display: none;">
+        <div class="layui-card module-card">
+          <div class="module-title">
+            <i class="fa fa-info-circle"></i>工单基本信息
+          </div>
+          <div class="module-content">
+            <div class="info-row">
+              <div class="info-item">
+                <span class="info-label">工单名称：</span>
+                <span class="info-value" id="riskName"></span>
+              </div>
+            </div>
+            <div class="info-row">
+              <div class="info-item">
+                <span class="info-label">工单类型：</span>
+                <span class="info-value" id="riskType"></span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">风险等级：</span>
+                <span class="info-value" id="riskLevel"></span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">部门：</span>
+                <span class="info-value" id="department"></span>
+              </div>
+            </div>
+            <div class="info-row">
+              <div class="info-item">
+                <span class="info-label">业务线：</span>
+                <span class="info-value" id="businessline"></span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">当前处理人：</span>
+                <span class="info-value" id="currentOwner"></span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">创建时间：</span>
+                <span class="info-value" id="createAt"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="layui-card module-card">
+          <div class="module-title">
+            <i class="fa fa-random"></i>处理流程
+            <span class="info-label" style="color: #00ae9d; margin-left: 15px;">当前状态：</span>
+            <span class="info-value" id="status"></span>
+          </div>
+          <div class="module-content">
+            <div class="flow-wrapper">
+              <div class="flow-track">
+                <div class="flow-track-progress" id="flowProgress"></div>
+              </div>
+              <div class="flow-container" id="flowContainer">
+                <!-- 流程节点将通过JS动态生成 -->
+              </div>
+            </div>
+            <div class="flow-actions">
+              <button class="layui-btn" id="nextStepBtn">下一步</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="layui-card module-card">
+          <div class="module-title">
+            <i class="fa fa-exchange"></i>流量对比
+          </div>
+          <div class="module-content">
+            <div class="traffic-container">
+              <div class="traffic-panel">
+                <div class="traffic-header">
+                  <i class="fa fa-file-text"></i>原始请求流量
+                </div>
+                <div class="traffic-content">
+                  <div class="traffic-section">
+                    <div class="traffic-section-title">Request</div>
+                    <pre id="originalRequest"></pre>
+                  </div>
+                  <div class="traffic-section">
+                    <div class="traffic-section-title">Response</div>
+                    <pre id="originalResponse"></pre>
+                  </div>
+                </div>
+              </div>
+              <div class="traffic-panel">
+                <div class="traffic-header">
+                  <i class="fa fa-refresh"></i>重放请求流量
+                </div>
+                <div class="traffic-content">
+                  <div class="traffic-section">
+                    <div class="traffic-section-title">Request</div>
+                    <pre id="dastRequest"></pre>
+                  </div>
+                  <div class="traffic-section">
+                    <div class="traffic-section-title">Response</div>
+                    <pre id="dastResponse"></pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="layui-card module-card">
+          <div class="module-title">
+            <i class="fa fa-lightbulb-o"></i>修复建议
+          </div>
+          <div class="module-content">
+            <div class="suggestion-content" id="suggestionContent">
+              <!-- 修复建议内容将通过JS动态生成 -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 引入layui JS -->
+  <script src="/static/component/layui/layui.js"></script>
+  <script src="/static/component/pear/pear.js"></script>
+
+  <script>
+    layui.use(['element', 'layer', 'jquery'], function(){
+      var layer = layui.layer;
+      var $ = layui.jquery;
+
+      // 从URL获取工单ID
+      function getWorkOrderId() {
+        var urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('id');
+      }
+
+      // 当前工单ID和状态
+      var workOrderId = getWorkOrderId();
+      var currentStatus = '';
+
+      // 获取工单详情数据
+      function getWorkOrderDetail() {
+        if (!workOrderId) {
+          layer.error('未找到工单ID，请检查URL参数', {icon: 2});
+          return;
+        }
+
+        // 调用后端接口
+        $.ajax({
+          url: '/api/workOrder/detail?id=' + workOrderId,
+          type: 'GET',
+          dataType: 'json',
+          success: function(result) {
+            if(result.code === 200) {
+              let data = result.data
+              // 隐藏加载状态，显示内容
+              $('#loading').hide();
+              $('#workOrderContent').show();
+
+              // 渲染基本信息
+              renderBasicInfo(data);
+
+              // 保存当前状态并渲染流程
+              currentStatus = data.status;
+              renderFlow();
+
+              // 渲染流量对比
+              renderTrafficData(data);
+
+              // 渲染修复建议
+              renderSuggestions();
+            }else {
+              layer.alert(result.message, {title: '失败',icon: 2});
+            }
+          },
+          error: function(xhr, status, error) {
+            $('#loading').html(`
+              <i class="fa fa-exclamation-triangle" style="color: #fa8c16;"></i>
+              <p style="color: #fa8c16;">加载失败，请刷新页面重试</p>
+            `);
+            layer.error('获取工单详情失败: ' + (xhr.responseJSON?.message || error), {icon: 2});
+          }
+        });
+      }
+
+      // 渲染基本信息
+      function renderBasicInfo(data) {
+        $('#riskName').text(data.riskName || '');
+        $('#riskType').text(data.riskType || '');
+        $('#department').text(data.department || '');
+        $('#businessline').text(data.businessline || '');
+        $('#currentOwner').text(data.currentOwner || '');
+        $('#status').text(data.status || '');
+        $('#createAt').text(data.createAt || '');
+
+        // 渲染风险等级（根据等级设置不同样式）
+        var riskLevelHtml = '';
+        var riskLevel = data.riskLevel || '';
+
+        switch(riskLevel) {
+          case '严重':
+            riskLevelHtml = '<span class="risk-level risk-severe">严重</span>';
+            break;
+          case '高危':
+            riskLevelHtml = '<span class="risk-level risk-high">高危</span>';
+            break;
+          case '中危':
+            riskLevelHtml = '<span class="risk-level risk-medium">中危</span>';
+            break;
+          case '低危':
+            riskLevelHtml = '<span class="risk-level risk-low">低危</span>';
+            break;
+          default:
+            riskLevelHtml = '<span class="risk-level">未知</span>';
+        }
+
+        $('#riskLevel').html(riskLevelHtml);
+      }
+
+      // 渲染流程节点
+      function renderFlow() {
+        var flowContainer = document.getElementById('flowContainer');
+        var flowProgress = document.getElementById('flowProgress');
+        var html = '';
+        var progressWidth = '0%';
+
+        // 判断是否是特殊状态
+        var specialStatus = ['已关闭', '已忽略', '已重复'].includes(currentStatus);
+
+        if (specialStatus) {
+          // 特殊状态流程：开始 -> 当前状态
+          html += `
+            <div class="flow-node completed">
+              <div class="flow-node-icon">
+                <i class="fa fa-check"></i>
+              </div>
+              <div class="flow-node-text">开始</div>
+            </div>
+            <div class="flow-node special">
+              <div class="flow-node-icon">
+                <i class="fa fa-flag"></i>
+              </div>
+              <div class="flow-node-text">${currentStatus}</div>
+            </div>
+          `;
+          progressWidth = '100%';
+
+          // 特殊状态禁用下一步按钮
+          $('#nextStepBtn').prop('disabled', true);
+        } else {
+          // 正常流程：开始 -> 待修复 -> 待复测 -> 已完成
+          var flowNodes = ['开始', '待修复', '待复测', '已完成'];
+          var nodeIndex = flowNodes.indexOf(currentStatus);
+
+          // 设置进度条宽度
+          if (nodeIndex > 0) {
+            progressWidth = ((nodeIndex - 1) / (flowNodes.length - 2) * 100) + '%';
+          }
+
+          // 已完成状态禁用下一步按钮
+          if (currentStatus === '已完成') {
+            $('#nextStepBtn').prop('disabled', true);
+          } else {
+            $('#nextStepBtn').prop('disabled', false);
+          }
+
+          flowNodes.forEach(function(node, index) {
+            var className = 'flow-node ';
+            var icon = '';
+
+            if (node === currentStatus) {
+              className += 'active';
+              icon = '<i class="fa fa-play"></i>';
+            } else if (index < flowNodes.indexOf(currentStatus)) {
+              className += 'completed';
+              icon = '<i class="fa fa-check"></i>';
+            } else {
+              className += 'pending';
+              icon = '<i class="fa fa-circle-o"></i>';
+            }
+
+            html += `
+              <div class="${className}">
+                <div class="flow-node-icon">
+                  ${icon}
+                </div>
+                <div class="flow-node-text">${node}</div>
+              </div>
+            `;
+          });
+        }
+
+        flowContainer.innerHTML = html;
+        flowProgress.style.width = progressWidth;
+      }
+
+      // 渲染流量对比数据
+      function renderTrafficData(data) {
+        // 显示原始请求和响应
+        $('#originalRequest').text(formatJson(data.originalRequest) || '无数据');
+        $('#originalResponse').text(formatJson(data.originalResponse) || '无数据');
+
+        // 显示重放请求和响应
+        $('#dastRequest').text(formatJson(data.dastRequest) || '无数据');
+        $('#dastResponse').text(formatJson(data.dastResponse) || '无数据');
+
+        // 对比差异
+        highlightDifferences();
+      }
+
+      // 格式化JSON数据以便展示
+      function formatJson(jsonStr) {
+        try {
+          // 如果是JSON字符串则格式化
+          if (typeof jsonStr === 'string' && jsonStr.trim() !== '') {
+            return JSON.stringify(JSON.parse(jsonStr), null, 2);
+          }
+          // 如果是对象则直接格式化
+          if (typeof jsonStr === 'object') {
+            return JSON.stringify(jsonStr, null, 2);
+          }
+        } catch (e) {
+          // 非JSON格式直接返回
+          return jsonStr;
+        }
+        return jsonStr;
+      }
+
+      // 高亮显示差异
+      function highlightDifferences() {
+        // 实际项目中可以使用更复杂的差异对比算法
+        // 这里只是简单示例
+        let originalRequest = $('#originalRequest').text();
+        let dastRequest = $('#dastRequest').text();
+
+        // 简单的差异标记（实际应用需替换为专业的diff算法）
+        if (originalRequest !== dastRequest) {
+          $('#dastRequest').html(dastRequest.replace(/("password": ")[^"]+(")/g, '$1<span class="diff">******</span>$2'));
+        }
+      }
+
+      // 渲染修复建议
+      function renderSuggestions() {
+        // 实际项目中，修复建议也应该从后端接口获取
+        var suggestions = `
+          <p>检查请求参数的完整性和格式正确性，特别是用户输入的验证</p>
+          <p>验证接口权限设置，确保当前用户有访问权限并符合最小权限原则</p>
+          <p>对比原始请求和重放请求的差异，重点检查头部信息和参数变化</p>
+          <p>修复完成后，建议重新进行测试验证，确保问题已彻底解决</p>
+          <p>记录修复过程和解决方案，以便未来遇到类似问题时参考</p>
+        `;
+        $('#suggestionContent').html(suggestions);
+      }
+
+      // 下一步按钮点击事件
+      $('#nextStepBtn').click(function() {
+        // 特殊状态不允许进行下一步
+        if (['待确认', '已关闭', '已忽略', '已重复', '已完成'].includes(currentStatus)) {
+          layer.msg('当前状态不允许进行下一步操作', {icon: 2});
+          return;
+        }
+
+        // 正常流程的下一步映射
+        var nextStatusMap = {
+          '开始': '待修复',
+          '待修复': '待复测',
+          '待复测': '已完成'
+        };
+
+        let data = {
+            id: workOrderId,
+            status: nextStatusMap[currentStatus]
+        }
+
+        // 显示确认提示
+        layer.confirm(`确定要将工单状态更新为"${nextStatusMap[currentStatus]}"吗？`, {
+          title: '状态更新确认',
+          icon: 3,
+          btn: ['确认', '取消']
+        }, function(index) {
+          layer.close(index);
+
+          // 显示加载动画
+          let loading = layer.load(2);
+
+          // 调用后端接口更新状态
+          $.ajax({
+            url: '/api/workOrder/updateStatus',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(response) {
+              layer.close(loading);
+
+              if (response.code === 200) {
+                // 更新当前状态
+                currentStatus = nextStatusMap[currentStatus];
+                // 更新页面显示
+                $('#status').text(currentStatus);
+                renderFlow();
+                // 提示信息
+                layer.msg('已进入"' + currentStatus + '"阶段', {icon: 1});
+              } else {
+                layer.msg('更新状态失败: ' + (response.message || '未知错误'), {icon: 2});
+              }
+            },
+            error: function(xhr, status, error) {
+              layer.close(loading);
+              layer.msg('更新状态失败: ' + error, {icon: 2});
+            }
+          });
+        });
+      });
+
+      // 页面加载时获取工单详情
+      getWorkOrderDetail();
+    });
+  </script>
+</body>
+</html>

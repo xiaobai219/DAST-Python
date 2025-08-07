@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>扫描列表</title>
+    <link rel="stylesheet" href="/static/component/pear/css/pear.css" />
+    <style>
+        .layui-form-label{
+            width: 70px;
+            padding: 9px 5px;
+        }
+    </style>
+</head>
+<body class="pear-container">
+<div class="layui-card">
+    <div class="layui-card-body">
+        <form class="layui-form" action="">
+            <div class="layui-form-item">
+                <div class="layui-form-item layui-inline">
+                    <label class="layui-form-label">Id</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="id" placeholder="id" class="layui-input id">
+                    </div>
+                    <label class="layui-form-label">Path</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="scanPath" placeholder="API" class="layui-input scanPath">
+                    </div>
+                    <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="scanList-query">
+                        <i class="layui-icon layui-icon-search"></i>
+                        搜索
+                    </button>
+                    <button type="reset" class="pear-btn pear-btn-md">
+                        <i class="layui-icon layui-icon-refresh"></i>
+                        重置
+                    </button>
+                    <button class="pear-btn pear-btn-md layui-border-green" lay-submit lay-filter="scanList-export">
+                        <i class="layui-icon layui-icon-download-circle"></i>
+                        导出
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="layui-card">
+    <div class="layui-card-body">
+        <table id="scanList-table" lay-filter="scanList-table"></table>
+    </div>
+</div>
+
+<script type="text/html" id="scanList-toolbar">
+<!--    <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="add">-->
+<!--        <i class="layui-icon layui-icon-add-1"></i>-->
+<!--        新增-->
+<!--    </button>-->
+<!--    <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove">-->
+<!--        <i class="layui-icon layui-icon-delete"></i>-->
+<!--        删除-->
+<!--    </button>-->
+</script>
+
+<script src="/static/component/layui/layui.js"></script>
+<script src="/static/component/pear/pear.js"></script>
+<script>
+    layui.use(['table', 'form', 'jquery'], function() {
+        let table = layui.table;
+        let form = layui.form;
+        let $ = layui.jquery;
+
+        let cols = [
+            [{
+                type: 'checkbox'
+            },
+                {
+                    title: 'ID',
+                    field: 'id',
+                    align: 'center',
+                    width: 300
+                },
+                {
+                    title: 'Path',
+                    field: 'scanPath',
+                    align: 'center'
+                },
+                {
+                    title: '扫描相似度',
+                    field: 'similarity',
+                    align: 'center'
+                },
+                {
+                    title: '上一次扫描时间',
+                    field: 'scanAt',
+                    align: 'center',
+                }
+            ]
+        ]
+
+        table.render({
+            elem: '#scanList-table',
+            url: '/api/searchScanList',
+            page: true,
+            method: "POST",
+            cols: cols,
+            contentType: 'application/json',
+            skin: 'line',
+            toolbar: '#scanList-toolbar',
+            defaultToolbar: [{
+                title: '刷新',
+                layEvent: 'refresh',
+                icon: 'layui-icon-refresh',
+            }, 'filter', 'print', 'exports'],
+            where: {"id": $(".id").val(),"scanPath": $(".scanPath").val()}
+        });
+
+        table.on('toolbar(scanList-table)', function(obj) {
+            if (obj.event === 'add') {
+                window.add();
+            } else if (obj.event === 'refresh') {
+                window.refresh();
+            } else if (obj.event === 'batchRemove') {
+                window.batchRemove(obj);
+            }
+        });
+
+        form.on('submit(scanList-query)', function() {
+            table.reload('scanList-table', {
+                where: {"id": $(".id").val(),"scanPath": $(".scanPath").val()},
+                page: {
+                    curr: 1 // 重新从第 1 页开始
+                },
+            })
+            return false;
+        });
+
+
+        form.on('submit(scanList-export)', function() {
+            window.open('/api/common/export?type=scanList')
+            return false;
+        });
+
+        window.refresh = function(param) {
+            table.reload('api-table');
+        }
+    })
+</script>
+</body>
+</html>

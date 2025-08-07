@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>扫描配置</title>
+    <link rel="stylesheet" href="/static/component/pear/css/pear.css" />
+    <style>
+        .layui-form-label{
+            width: 70px;
+            padding: 9px 5px;
+        }
+    </style>
+</head>
+<body class="pear-container">
+<div class="layui-card">
+    <div class="layui-card-body">
+        <form class="layui-form" action="">
+            <div class="layui-form-item">
+                <div class="layui-form-item layui-inline">
+                    <label class="layui-form-label">Host</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="scanHost" placeholder="Host" class="layui-input scanHost">
+                    </div>
+                    <label class="layui-form-label">部门</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="department" placeholder="部门" class="layui-input department">
+                    </div>
+                    <label class="layui-form-label">业务线</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="businessline" placeholder="业务线" class="layui-input businessline">
+                    </div>
+                    <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="ruleConfig-query">
+                        <i class="layui-icon layui-icon-search"></i>
+                        搜索
+                    </button>
+                    <button type="reset" class="pear-btn pear-btn-md">
+                        <i class="layui-icon layui-icon-refresh"></i>
+                        重置
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="layui-card">
+    <div class="layui-card-body">
+        <table id="ruleConfig-table" lay-filter="ruleConfig-table"></table>
+    </div>
+</div>
+
+<script type="text/html" id="ruleConfig-toolbar">
+    <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="add">
+        <i class="layui-icon layui-icon-add-1"></i>
+        新增
+    </button>
+    <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove">
+        <i class="layui-icon layui-icon-delete"></i>
+        删除
+    </button>
+    <button class="pear-btn pear-btn-md" lay-event="apply">
+        <i class="layui-icon layui-icon-component"></i>
+        应用规则
+    </button>
+</script>
+
+<script src="/static/component/layui/layui.js"></script>
+<script src="/static/component/pear/pear.js"></script>
+<script>
+    layui.use(['table', 'form', 'jquery','common'], function() {
+        let table = layui.table;
+        let form = layui.form;
+        let $ = layui.jquery;
+        let common = layui.common;
+
+        let cols = [
+            [{
+                type: 'checkbox'
+            },
+                {
+                    title: 'ID',
+                    field: 'id',
+                    align: 'center',
+                    width: 100
+                },
+                {
+                    title: 'Host',
+                    field: 'scanHost',
+                    align: 'center'
+                },
+                {
+                    title: '扫描规则',
+                    field: 'scanRule',
+                    align: 'center'
+                },
+                {
+                    title: '部门',
+                    field: 'department',
+                    align: 'center'
+                },
+                {
+                    title: '业务线',
+                    field: 'businessline',
+                    align: 'center',
+                },
+                {
+                    title: '创建人',
+                    field: 'createOwner',
+                    align: 'center',
+                },
+                {
+                    title: '上一次更新人',
+                    field: 'updateOwner',
+                    align: 'center',
+                },
+                {
+                    title: '创建时间',
+                    field: 'createAt',
+                    align: 'center',
+                },
+                {
+                    title: '操作',
+                    field: 'operate',
+                    width: 100,
+                    fixed: 'right',  // 固定在右侧
+                    align: 'center',
+                    // 自定义模板，添加两个按钮
+                    templet: function(d){
+                      return `
+                        <button class="layui-btn layui-btn-normal pear-btn-sm" lay-event="edit">编辑</button>
+                      `;
+                    }
+                }
+            ]
+        ]
+
+        table.render({
+            elem: '#ruleConfig-table',
+            url: '/api/searchRuleConfig',
+            page: true,
+            method: "POST",
+            cols: cols,
+            contentType: 'application/json',
+            skin: 'line',
+            toolbar: '#ruleConfig-toolbar',
+            defaultToolbar: [{
+                title: '刷新',
+                layEvent: 'refresh',
+                icon: 'layui-icon-refresh',
+            }, 'filter', 'print', 'exports'],
+            where: {"scanHost": $(".scanHost").val(), "department": $(".department").val(),"businessline": $(".businessline").val()}
+        });
+
+        table.on('toolbar(ruleConfig-table)', function(obj) {
+            if (obj.event === 'add') {
+                window.add();
+            } else if (obj.event === 'refresh') {
+                window.refresh();
+            } else if (obj.event === 'batchRemove') {
+                window.batchRemove(obj);
+            }else if (obj.event === 'apply'){
+                $.ajax({
+                    url: "/api/ruleConfig/apply",
+                    method: "GET",
+                    success: function(result) {
+                        if (result.code === 200) {
+                            layer.msg(result.message, {
+                                icon: 1,
+                                time: 1000
+                            });
+                        } else {
+                            layer.msg(result.message, {
+                                icon: 2,
+                                time: 1000
+                            });
+                        }
+                    }
+                })
+            }
+        });
+
+        form.on('submit(ruleConfig-query)', function() {
+            table.reload('ruleConfig-table', {
+                where: {"scanHost": $(".scanHost").val(), "department": $(".department").val(),"businessline": $(".businessline").val()},
+                page: {
+                    curr: 1 // 重新从第 1 页开始
+                },
+            })
+            return false;
+        });
+
+        window.add = function() {
+            layer.open({
+                type: 2,
+                title: '新增扫描配置',
+                shade: 0.1,
+                area: [common.isModile()?'100%':'1310px', common.isModile()?'100%':'800px'],
+                content: '/view/module/addRuleConfig.html'
+            });
+        }
+
+        // 监听工具条事件
+        table.on('tool(ruleConfig-table)', function(obj){
+            var data = obj.data; // 获得当前行数据
+            var layEvent = obj.event; // 获得 lay-event 对应的值
+                if(layEvent === 'edit'){
+                    layer.open({
+                    type: 2,
+                    title: '编辑扫描配置',
+                    shade: 0.1,
+                    area: [common.isModile()?'100%':'1310px', common.isModile()?'100%':'800px'],
+                    content: '/view/module/addRuleConfig.html?id=' + data.id
+                });
+            }
+        });
+
+        window.batchRemove = function(obj) {
+            var checkStatus = table.checkStatus('ruleConfig-table');
+            var data = checkStatus.data;
+
+            if (data.length === 0) {
+                layer.msg("未选中数据", {
+                    icon: 3,
+                    time: 1000
+                });
+                return false;
+            }
+
+            // 提取选中行的ID数组
+            var ids = data.map(function(item) {
+                return item.id;
+            });
+
+
+            layer.confirm('确定要删除这些配置吗？', {
+                icon: 3,
+                title: '提示'
+            }, function(index) {
+                layer.close(index);
+                let loading = layer.load();
+                $.ajax({
+                    url: "/api/ruleConfig/deleteById",
+                    data: JSON.stringify(ids),
+                    contentType: 'application/json',
+                    method: "POST",
+                    success: function(result) {
+                        layer.close(loading);
+                        if (result.code === 200) {
+                            layer.msg(result.message, {
+                                icon: 1,
+                                time: 1000
+                            }, function() {
+                                table.reload('ruleConfig-table');
+                            });
+                        } else {
+                            layer.msg(result.message, {
+                                icon: 2,
+                                time: 1000
+                            });
+                        }
+                    }
+                })
+            });
+        }
+
+        window.refresh = function(param) {
+            table.reload('ruleConfig-table');
+        }
+    })
+</script>
+</body>
+</html>
